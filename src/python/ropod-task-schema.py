@@ -47,6 +47,11 @@ def from_union(fs, x):
     assert False
 
 
+def from_float(x):
+    assert isinstance(x, (float, int)) and not isinstance(x, bool)
+    return float(x)
+
+
 def from_datetime(x):
     return dateutil.parser.parse(x)
 
@@ -54,11 +59,6 @@ def from_datetime(x):
 def to_enum(c, x):
     assert isinstance(x, c)
     return x.value
-
-
-def from_float(x):
-    assert isinstance(x, (float, int)) and not isinstance(x, bool)
-    return float(x)
 
 
 def to_float(x):
@@ -69,6 +69,11 @@ def to_float(x):
 def to_class(c, x):
     assert isinstance(x, c)
     return x.to_dict()
+
+
+def from_int(x):
+    assert isinstance(x, int) and not isinstance(x, bool)
+    return x
 
 
 class MsgMetamodel(Enum):
@@ -111,7 +116,7 @@ class Header:
         metamodel = MsgMetamodel(obj.get(u"metamodel"))
         msg_id = UUID(obj.get(u"msgId"))
         receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
-        timestamp = from_union([from_datetime, from_none], obj.get(u"timestamp"))
+        timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
         type = TypeEnum(obj.get(u"type"))
         version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
@@ -121,7 +126,7 @@ class Header:
         result[u"metamodel"] = to_enum(MsgMetamodel, self.metamodel)
         result[u"msgId"] = str(self.msg_id)
         result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
-        result[u"timestamp"] = from_union([lambda x: x.isoformat(), from_none], self.timestamp)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
         result[u"type"] = to_enum(TypeEnum, self.type)
         result[u"version"] = from_union([from_str, from_none], self.version)
         return result
@@ -194,7 +199,7 @@ class TopologicNode:
         debug_area_nodes = from_union([lambda x: from_list(GeometricNode.from_dict, x), from_none], obj.get(u"debugAreaNodes"))
         debug_waypoint = from_union([GeometricNode.from_dict, from_none], obj.get(u"debugWaypoint"))
         id = UUID(obj.get(u"id"))
-        name = from_union([from_str, from_none], obj.get(u"name"))
+        name = from_str(obj.get(u"name"))
         return TopologicNode(debug_area_nodes, debug_waypoint, id, name)
 
     def to_dict(self):
@@ -202,7 +207,7 @@ class TopologicNode:
         result[u"debugAreaNodes"] = from_union([lambda x: from_list(lambda x: to_class(GeometricNode, x), x), from_none], self.debug_area_nodes)
         result[u"debugWaypoint"] = from_union([lambda x: to_class(GeometricNode, x), from_none], self.debug_waypoint)
         result[u"id"] = str(self.id)
-        result[u"name"] = from_union([from_str, from_none], self.name)
+        result[u"name"] = from_str(self.name)
         return result
 
 
@@ -227,7 +232,7 @@ class Action:
         areas = from_union([lambda x: from_list(TopologicNode.from_dict, x), from_none], obj.get(u"areas"))
         estimated_duration = from_union([from_str, from_none], obj.get(u"estimatedDuration"))
         elevator_id = from_union([lambda x: UUID(x), from_none], obj.get(u"elevatorId"))
-        estimated_arrival_time = from_union([from_datetime, from_none], obj.get(u"estimatedArrivalTime"))
+        estimated_arrival_time = from_union([from_float, from_datetime, from_none], obj.get(u"estimatedArrivalTime"))
         level = from_union([from_float, from_none], obj.get(u"level"))
         goal_floor = from_union([from_float, from_none], obj.get(u"goalFloor"))
         start_floor = from_union([from_float, from_none], obj.get(u"startFloor"))
@@ -240,14 +245,14 @@ class Action:
         result[u"areas"] = from_union([lambda x: from_list(lambda x: to_class(TopologicNode, x), x), from_none], self.areas)
         result[u"estimatedDuration"] = from_union([from_str, from_none], self.estimated_duration)
         result[u"elevatorId"] = from_union([lambda x: str(x), from_none], self.elevator_id)
-        result[u"estimatedArrivalTime"] = from_union([lambda x: x.isoformat(), from_none], self.estimated_arrival_time)
+        result[u"estimatedArrivalTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.estimated_arrival_time)
         result[u"level"] = from_union([to_float, from_none], self.level)
         result[u"goalFloor"] = from_union([to_float, from_none], self.goal_floor)
         result[u"startFloor"] = from_union([to_float, from_none], self.start_floor)
         return result
 
 
-class DeviceType(Enum):
+class LoadType(Enum):
     """All possible types of devices"""
     LAUNDRY = u"laundry"
     MOBIDIK = u"mobidik"
@@ -273,11 +278,21 @@ class MetamodelEnum(Enum):
 
 class Payload:
     """The actual task description."""
-    def __init__(self, metamodel, actions, device_id, device_type, task_id, team_robot_ids):
+    def __init__(self, metamodel, actions, delivery_location, earliest_finish_time, earliest_start_time, finish_time, latest_finish_time, latest_start_time, load_id, load_type, pickup_location, priority, start_time, status, task_id, team_robot_ids):
         self.metamodel = metamodel
         self.actions = actions
-        self.device_id = device_id
-        self.device_type = device_type
+        self.delivery_location = delivery_location
+        self.earliest_finish_time = earliest_finish_time
+        self.earliest_start_time = earliest_start_time
+        self.finish_time = finish_time
+        self.latest_finish_time = latest_finish_time
+        self.latest_start_time = latest_start_time
+        self.load_id = load_id
+        self.load_type = load_type
+        self.pickup_location = pickup_location
+        self.priority = priority
+        self.start_time = start_time
+        self.status = status
         self.task_id = task_id
         self.team_robot_ids = team_robot_ids
 
@@ -286,18 +301,38 @@ class Payload:
         assert isinstance(obj, dict)
         metamodel = MetamodelEnum(obj.get(u"metamodel"))
         actions = from_list(Action.from_dict, obj.get(u"actions"))
-        device_id = from_str(obj.get(u"deviceId"))
-        device_type = DeviceType(obj.get(u"deviceType"))
+        delivery_location = from_union([from_str, from_none], obj.get(u"deliveryLocation"))
+        earliest_finish_time = from_union([from_float, from_datetime, from_none], obj.get(u"earliestFinishTime"))
+        earliest_start_time = from_union([from_float, from_datetime, from_none], obj.get(u"earliestStartTime"))
+        finish_time = from_union([from_float, from_datetime, from_none], obj.get(u"finishTime"))
+        latest_finish_time = from_union([from_float, from_datetime, from_none], obj.get(u"latestFinishTime"))
+        latest_start_time = from_union([from_float, from_datetime, from_none], obj.get(u"latestStartTime"))
+        load_id = from_str(obj.get(u"loadId"))
+        load_type = LoadType(obj.get(u"loadType"))
+        pickup_location = from_union([from_str, from_none], obj.get(u"pickupLocation"))
+        priority = from_union([from_int, from_none], obj.get(u"priority"))
+        start_time = from_union([from_float, from_datetime, from_none], obj.get(u"startTime"))
+        status = from_union([from_str, from_none], obj.get(u"status"))
         task_id = UUID(obj.get(u"taskId"))
         team_robot_ids = from_list(lambda x: UUID(x), obj.get(u"teamRobotIds"))
-        return Payload(metamodel, actions, device_id, device_type, task_id, team_robot_ids)
+        return Payload(metamodel, actions, delivery_location, earliest_finish_time, earliest_start_time, finish_time, latest_finish_time, latest_start_time, load_id, load_type, pickup_location, priority, start_time, status, task_id, team_robot_ids)
 
     def to_dict(self):
         result = {}
         result[u"metamodel"] = to_enum(MetamodelEnum, self.metamodel)
         result[u"actions"] = from_list(lambda x: to_class(Action, x), self.actions)
-        result[u"deviceId"] = from_str(self.device_id)
-        result[u"deviceType"] = to_enum(DeviceType, self.device_type)
+        result[u"deliveryLocation"] = from_union([from_str, from_none], self.delivery_location)
+        result[u"earliestFinishTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.earliest_finish_time)
+        result[u"earliestStartTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.earliest_start_time)
+        result[u"finishTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.finish_time)
+        result[u"latestFinishTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.latest_finish_time)
+        result[u"latestStartTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.latest_start_time)
+        result[u"loadId"] = from_str(self.load_id)
+        result[u"loadType"] = to_enum(LoadType, self.load_type)
+        result[u"pickupLocation"] = from_union([from_str, from_none], self.pickup_location)
+        result[u"priority"] = from_union([from_int, from_none], self.priority)
+        result[u"startTime"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.start_time)
+        result[u"status"] = from_union([from_str, from_none], self.status)
         result[u"taskId"] = str(self.task_id)
         result[u"teamRobotIds"] = from_list(lambda x: str(x), self.team_robot_ids)
         return result

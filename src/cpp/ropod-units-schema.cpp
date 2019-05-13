@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <regex>
 
+#ifndef NLOHMANN_OPT_HELPER
+#define NLOHMANN_OPT_HELPER
 namespace nlohmann {
     template <typename T>
     struct adl_serializer<std::shared_ptr<T>> {
@@ -27,6 +29,7 @@ namespace nlohmann {
         }
     };
 }
+#endif
 
 namespace quicktype {
     using nlohmann::json;

@@ -5,7 +5,7 @@
 //
 //  Then include this file, and then do
 //
-//     RopodBlackBoxVariableQuerySchema data = nlohmann::json::parse(jsonString);
+//     RopodElevatorStatusSchema data = nlohmann::json::parse(jsonString);
 
 #pragma once
 
@@ -175,7 +175,7 @@ namespace quicktype {
      * ropod-cmd-schema.json. More specific Schemata will further specify what will be required
      * here.
      */
-    enum class GenericType : int { VARIABLE_QUERY };
+    enum class TypeEnum : int { ELEVATOR_STATUS, ELEVATOR_STATUS_QUERY };
 
     /**
      * Complete specification of required and optioanl header parts.
@@ -196,7 +196,7 @@ namespace quicktype {
         ClassMemberConstraints msg_id_constraint;
         std::shared_ptr<std::vector<std::string>> receiver_ids;
         TimeStamp timestamp;
-        GenericType type;
+        TypeEnum type;
         std::shared_ptr<std::string> version;
 
         public:
@@ -214,56 +214,129 @@ namespace quicktype {
         TimeStamp get_timestamp() const { return timestamp; }
         void set_timestamp(TimeStamp value) { this->timestamp = value; }
 
-        const GenericType & get_type() const { return type; }
-        GenericType & get_mutable_type() { return type; }
-        void set_type(const GenericType & value) { this->type = value; }
+        const TypeEnum & get_type() const { return type; }
+        TypeEnum & get_mutable_type() { return type; }
+        void set_type(const TypeEnum & value) { this->type = value; }
 
         std::shared_ptr<std::string> get_version() const { return version; }
         void set_version(std::shared_ptr<std::string> value) { this->version = value; }
     };
 
     /**
-     * Data associated with a black box variable query (e.g. who is requesting the data).
+     * Id of receiver. Can be UUID or any string. This is optional.
+     *
+     * A time stamp using the date-time format. An RFC3339  Section 5.6 timestamp in UTC time.
+     * This is formatted as YYYY-MM-DDThh:mm:ss.fffZ. The milliseconds portion .fff is
+     * optional.
+     *
+     * Type identifier for the payload. This is usually an enum like type. E.g. CMD. More
+     * specific Schemata will further specify what will be required here.
+     *
+     * Version of message type. E.g. 0.1.0
+     *
+     * Metamodel identifier for the payload. This is usually a Schmea file like
+     * ropod-cmd-schema.json. More specific Schemata will further specify what will be required
+     * here.
+     *
+     * Metamodel elevator status message.
      */
-    class Payload {
+    enum class MetamodelEnum : int { ROPOD_ELEVATOR_STATUS_SCHEMA_JSON };
+
+    enum class Query : int { GET_ALL_ELEVATOR_IDS, GET_ELEVATOR_STATUS };
+
+    /**
+     * Status update for a single elevator.  This is a literal translation of the CAN bus
+     * protocol.
+     */
+    class ElevatorStatusPayload {
         public:
-        Payload() = default;
-        virtual ~Payload() = default;
+        ElevatorStatusPayload() :
+            query_id_constraint(boost::none, boost::none, boost::none, boost::none, std::string("^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"))
+        {}
+        virtual ~ElevatorStatusPayload() = default;
 
         private:
-        nlohmann::json black_box_id;
-        nlohmann::json sender_id;
+        MetamodelEnum metamodel;
+        std::shared_ptr<bool> admitted_request_from_robot;
+        std::shared_ptr<int64_t> calls;
+        std::shared_ptr<bool> door_open_at_goal_floor;
+        std::shared_ptr<bool> door_open_at_start_floor;
+        std::shared_ptr<bool> door_waits_for_closing_command;
+        std::shared_ptr<std::vector<int64_t>> elevator_ids;
+        std::shared_ptr<int64_t> floor;
+        std::shared_ptr<int64_t> id;
+        std::shared_ptr<bool> is_available;
+        std::shared_ptr<std::string> query_id;
+        ClassMemberConstraints query_id_constraint;
+        std::shared_ptr<bool> query_success;
+        std::shared_ptr<bool> status_has_changed;
+        std::shared_ptr<Query> query;
 
         public:
-        const nlohmann::json & get_black_box_id() const { return black_box_id; }
-        nlohmann::json & get_mutable_black_box_id() { return black_box_id; }
-        void set_black_box_id(const nlohmann::json & value) { this->black_box_id = value; }
+        const MetamodelEnum & get_metamodel() const { return metamodel; }
+        MetamodelEnum & get_mutable_metamodel() { return metamodel; }
+        void set_metamodel(const MetamodelEnum & value) { this->metamodel = value; }
 
-        const nlohmann::json & get_sender_id() const { return sender_id; }
-        nlohmann::json & get_mutable_sender_id() { return sender_id; }
-        void set_sender_id(const nlohmann::json & value) { this->sender_id = value; }
+        std::shared_ptr<bool> get_admitted_request_from_robot() const { return admitted_request_from_robot; }
+        void set_admitted_request_from_robot(std::shared_ptr<bool> value) { this->admitted_request_from_robot = value; }
+
+        std::shared_ptr<int64_t> get_calls() const { return calls; }
+        void set_calls(std::shared_ptr<int64_t> value) { this->calls = value; }
+
+        std::shared_ptr<bool> get_door_open_at_goal_floor() const { return door_open_at_goal_floor; }
+        void set_door_open_at_goal_floor(std::shared_ptr<bool> value) { this->door_open_at_goal_floor = value; }
+
+        std::shared_ptr<bool> get_door_open_at_start_floor() const { return door_open_at_start_floor; }
+        void set_door_open_at_start_floor(std::shared_ptr<bool> value) { this->door_open_at_start_floor = value; }
+
+        std::shared_ptr<bool> get_door_waits_for_closing_command() const { return door_waits_for_closing_command; }
+        void set_door_waits_for_closing_command(std::shared_ptr<bool> value) { this->door_waits_for_closing_command = value; }
+
+        std::shared_ptr<std::vector<int64_t>> get_elevator_ids() const { return elevator_ids; }
+        void set_elevator_ids(std::shared_ptr<std::vector<int64_t>> value) { this->elevator_ids = value; }
+
+        std::shared_ptr<int64_t> get_floor() const { return floor; }
+        void set_floor(std::shared_ptr<int64_t> value) { this->floor = value; }
+
+        std::shared_ptr<int64_t> get_id() const { return id; }
+        void set_id(std::shared_ptr<int64_t> value) { this->id = value; }
+
+        std::shared_ptr<bool> get_is_available() const { return is_available; }
+        void set_is_available(std::shared_ptr<bool> value) { this->is_available = value; }
+
+        std::shared_ptr<std::string> get_query_id() const { return query_id; }
+        void set_query_id(std::shared_ptr<std::string> value) { if (value) CheckConstraint("query_id", query_id_constraint, *value); this->query_id = value; }
+
+        std::shared_ptr<bool> get_query_success() const { return query_success; }
+        void set_query_success(std::shared_ptr<bool> value) { this->query_success = value; }
+
+        std::shared_ptr<bool> get_status_has_changed() const { return status_has_changed; }
+        void set_status_has_changed(std::shared_ptr<bool> value) { this->status_has_changed = value; }
+
+        std::shared_ptr<Query> get_query() const { return query; }
+        void set_query(std::shared_ptr<Query> value) { this->query = value; }
     };
 
     /**
-     * Find the names of all variables logged on a given black box
+     * Status messages of an elevator
      */
-    class RopodBlackBoxVariableQuerySchema {
+    class RopodElevatorStatusSchema {
         public:
-        RopodBlackBoxVariableQuerySchema() = default;
-        virtual ~RopodBlackBoxVariableQuerySchema() = default;
+        RopodElevatorStatusSchema() = default;
+        virtual ~RopodElevatorStatusSchema() = default;
 
         private:
         Header header;
-        Payload payload;
+        ElevatorStatusPayload payload;
 
         public:
         const Header & get_header() const { return header; }
         Header & get_mutable_header() { return header; }
         void set_header(const Header & value) { this->header = value; }
 
-        const Payload & get_payload() const { return payload; }
-        Payload & get_mutable_payload() { return payload; }
-        void set_payload(const Payload & value) { this->payload = value; }
+        const ElevatorStatusPayload & get_payload() const { return payload; }
+        ElevatorStatusPayload & get_mutable_payload() { return payload; }
+        void set_payload(const ElevatorStatusPayload & value) { this->payload = value; }
     };
 }
 
@@ -271,17 +344,23 @@ namespace nlohmann {
     void from_json(const json & j, quicktype::Header & x);
     void to_json(json & j, const quicktype::Header & x);
 
-    void from_json(const json & j, quicktype::Payload & x);
-    void to_json(json & j, const quicktype::Payload & x);
+    void from_json(const json & j, quicktype::ElevatorStatusPayload & x);
+    void to_json(json & j, const quicktype::ElevatorStatusPayload & x);
 
-    void from_json(const json & j, quicktype::RopodBlackBoxVariableQuerySchema & x);
-    void to_json(json & j, const quicktype::RopodBlackBoxVariableQuerySchema & x);
+    void from_json(const json & j, quicktype::RopodElevatorStatusSchema & x);
+    void to_json(json & j, const quicktype::RopodElevatorStatusSchema & x);
 
     void from_json(const json & j, quicktype::MsgMetamodel & x);
     void to_json(json & j, const quicktype::MsgMetamodel & x);
 
-    void from_json(const json & j, quicktype::GenericType & x);
-    void to_json(json & j, const quicktype::GenericType & x);
+    void from_json(const json & j, quicktype::TypeEnum & x);
+    void to_json(json & j, const quicktype::TypeEnum & x);
+
+    void from_json(const json & j, quicktype::MetamodelEnum & x);
+    void to_json(json & j, const quicktype::MetamodelEnum & x);
+
+    void from_json(const json & j, quicktype::Query & x);
+    void to_json(json & j, const quicktype::Query & x);
     void from_json(const json & j, boost::variant<double, std::string> & x);
     void to_json(json & j, const boost::variant<double, std::string> & x);
 
@@ -290,7 +369,7 @@ namespace nlohmann {
         x.set_msg_id(j.at("msgId").get<std::string>());
         x.set_receiver_ids(quicktype::get_optional<std::vector<std::string>>(j, "receiverIds"));
         x.set_timestamp(quicktype::get_optional<boost::variant<double, std::string>>(j, "timestamp"));
-        x.set_type(j.at("type").get<quicktype::GenericType>());
+        x.set_type(j.at("type").get<quicktype::TypeEnum>());
         x.set_version(quicktype::get_optional<std::string>(j, "version"));
     }
 
@@ -304,23 +383,47 @@ namespace nlohmann {
         j["version"] = x.get_version();
     }
 
-    inline void from_json(const json & j, quicktype::Payload& x) {
-        x.set_black_box_id(quicktype::get_untyped(j, "blackBoxId"));
-        x.set_sender_id(quicktype::get_untyped(j, "senderId"));
+    inline void from_json(const json & j, quicktype::ElevatorStatusPayload& x) {
+        x.set_metamodel(j.at("metamodel").get<quicktype::MetamodelEnum>());
+        x.set_admitted_request_from_robot(quicktype::get_optional<bool>(j, "admittedRequestFromRobot"));
+        x.set_calls(quicktype::get_optional<int64_t>(j, "calls"));
+        x.set_door_open_at_goal_floor(quicktype::get_optional<bool>(j, "doorOpenAtGoalFloor"));
+        x.set_door_open_at_start_floor(quicktype::get_optional<bool>(j, "doorOpenAtStartFloor"));
+        x.set_door_waits_for_closing_command(quicktype::get_optional<bool>(j, "doorWaitsForClosingCommand"));
+        x.set_elevator_ids(quicktype::get_optional<std::vector<int64_t>>(j, "elevatorIds"));
+        x.set_floor(quicktype::get_optional<int64_t>(j, "floor"));
+        x.set_id(quicktype::get_optional<int64_t>(j, "id"));
+        x.set_is_available(quicktype::get_optional<bool>(j, "isAvailable"));
+        x.set_query_id(quicktype::get_optional<std::string>(j, "queryId"));
+        x.set_query_success(quicktype::get_optional<bool>(j, "querySuccess"));
+        x.set_status_has_changed(quicktype::get_optional<bool>(j, "statusHasChanged"));
+        x.set_query(quicktype::get_optional<quicktype::Query>(j, "query"));
     }
 
-    inline void to_json(json & j, const quicktype::Payload & x) {
+    inline void to_json(json & j, const quicktype::ElevatorStatusPayload & x) {
         j = json::object();
-        j["blackBoxId"] = x.get_black_box_id();
-        j["senderId"] = x.get_sender_id();
+        j["metamodel"] = x.get_metamodel();
+        j["admittedRequestFromRobot"] = x.get_admitted_request_from_robot();
+        j["calls"] = x.get_calls();
+        j["doorOpenAtGoalFloor"] = x.get_door_open_at_goal_floor();
+        j["doorOpenAtStartFloor"] = x.get_door_open_at_start_floor();
+        j["doorWaitsForClosingCommand"] = x.get_door_waits_for_closing_command();
+        j["elevatorIds"] = x.get_elevator_ids();
+        j["floor"] = x.get_floor();
+        j["id"] = x.get_id();
+        j["isAvailable"] = x.get_is_available();
+        j["queryId"] = x.get_query_id();
+        j["querySuccess"] = x.get_query_success();
+        j["statusHasChanged"] = x.get_status_has_changed();
+        j["query"] = x.get_query();
     }
 
-    inline void from_json(const json & j, quicktype::RopodBlackBoxVariableQuerySchema& x) {
+    inline void from_json(const json & j, quicktype::RopodElevatorStatusSchema& x) {
         x.set_header(j.at("header").get<quicktype::Header>());
-        x.set_payload(j.at("payload").get<quicktype::Payload>());
+        x.set_payload(j.at("payload").get<quicktype::ElevatorStatusPayload>());
     }
 
-    inline void to_json(json & j, const quicktype::RopodBlackBoxVariableQuerySchema & x) {
+    inline void to_json(json & j, const quicktype::RopodElevatorStatusSchema & x) {
         j = json::object();
         j["header"] = x.get_header();
         j["payload"] = x.get_payload();
@@ -338,14 +441,42 @@ namespace nlohmann {
         }
     }
 
-    inline void from_json(const json & j, quicktype::GenericType & x) {
-        if (j == "VARIABLE-QUERY") x = quicktype::GenericType::VARIABLE_QUERY;
+    inline void from_json(const json & j, quicktype::TypeEnum & x) {
+        if (j == "ELEVATOR-STATUS") x = quicktype::TypeEnum::ELEVATOR_STATUS;
+        else if (j == "ELEVATOR-STATUS-QUERY") x = quicktype::TypeEnum::ELEVATOR_STATUS_QUERY;
         else throw "Input JSON does not conform to schema";
     }
 
-    inline void to_json(json & j, const quicktype::GenericType & x) {
+    inline void to_json(json & j, const quicktype::TypeEnum & x) {
         switch (x) {
-            case quicktype::GenericType::VARIABLE_QUERY: j = "VARIABLE-QUERY"; break;
+            case quicktype::TypeEnum::ELEVATOR_STATUS: j = "ELEVATOR-STATUS"; break;
+            case quicktype::TypeEnum::ELEVATOR_STATUS_QUERY: j = "ELEVATOR-STATUS-QUERY"; break;
+            default: throw "This should not happen";
+        }
+    }
+
+    inline void from_json(const json & j, quicktype::MetamodelEnum & x) {
+        if (j == "ropod-elevator-status-schema.json") x = quicktype::MetamodelEnum::ROPOD_ELEVATOR_STATUS_SCHEMA_JSON;
+        else throw "Input JSON does not conform to schema";
+    }
+
+    inline void to_json(json & j, const quicktype::MetamodelEnum & x) {
+        switch (x) {
+            case quicktype::MetamodelEnum::ROPOD_ELEVATOR_STATUS_SCHEMA_JSON: j = "ropod-elevator-status-schema.json"; break;
+            default: throw "This should not happen";
+        }
+    }
+
+    inline void from_json(const json & j, quicktype::Query & x) {
+        if (j == "GET_ALL_ELEVATOR_IDS") x = quicktype::Query::GET_ALL_ELEVATOR_IDS;
+        else if (j == "GET_ELEVATOR_STATUS") x = quicktype::Query::GET_ELEVATOR_STATUS;
+        else throw "Input JSON does not conform to schema";
+    }
+
+    inline void to_json(json & j, const quicktype::Query & x) {
+        switch (x) {
+            case quicktype::Query::GET_ALL_ELEVATOR_IDS: j = "GET_ALL_ELEVATOR_IDS"; break;
+            case quicktype::Query::GET_ELEVATOR_STATUS: j = "GET_ELEVATOR_STATUS"; break;
             default: throw "This should not happen";
         }
     }

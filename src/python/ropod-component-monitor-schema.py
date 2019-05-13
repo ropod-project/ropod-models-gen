@@ -47,6 +47,11 @@ def from_union(fs, x):
     assert False
 
 
+def from_float(x):
+    assert isinstance(x, (float, int)) and not isinstance(x, bool)
+    return float(x)
+
+
 def from_datetime(x):
     return dateutil.parser.parse(x)
 
@@ -54,6 +59,11 @@ def from_datetime(x):
 def to_enum(c, x):
     assert isinstance(x, c)
     return x.value
+
+
+def to_float(x):
+    assert isinstance(x, float)
+    return x
 
 
 def from_dict(f, x):
@@ -106,7 +116,7 @@ class Header:
         metamodel = MsgMetamodel(obj.get(u"metamodel"))
         msg_id = UUID(obj.get(u"msgId"))
         receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
-        timestamp = from_union([from_datetime, from_none], obj.get(u"timestamp"))
+        timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
         type = GenericType(obj.get(u"type"))
         version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
@@ -116,7 +126,7 @@ class Header:
         result[u"metamodel"] = to_enum(MsgMetamodel, self.metamodel)
         result[u"msgId"] = str(self.msg_id)
         result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
-        result[u"timestamp"] = from_union([lambda x: x.isoformat(), from_none], self.timestamp)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
         result[u"type"] = to_enum(GenericType, self.type)
         result[u"version"] = from_union([from_str, from_none], self.version)
         return result

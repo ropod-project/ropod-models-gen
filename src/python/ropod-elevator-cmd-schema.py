@@ -15,7 +15,7 @@
 #
 # and then, to convert JSON from a string, do
 #
-#     result = ropod_cmd_schema_from_dict(json.loads(json_string))
+#     result = ropod_elevator_cmd_schema_from_dict(json.loads(json_string))
 
 from enum import Enum
 from uuid import UUID
@@ -66,6 +66,16 @@ def to_float(x):
     return x
 
 
+def from_int(x):
+    assert isinstance(x, int) and not isinstance(x, bool)
+    return x
+
+
+def from_bool(x):
+    assert isinstance(x, bool)
+    return x
+
+
 def to_class(c, x):
     assert isinstance(x, c)
     return x.to_dict()
@@ -88,7 +98,8 @@ class TypeEnum(Enum):
     ropod-cmd-schema.json. More specific Schemata will further specify what will be required
     here.
     """
-    CMD = u"CMD"
+    ELEVATOR_CMD = u"ELEVATOR-CMD"
+    ELEVATOR_CMD_REPLY = u"ELEVATOR-CMD-REPLY"
 
 
 class Header:
@@ -128,15 +139,10 @@ class Header:
 
 
 class Command(Enum):
-    """Doh it the right wayyy. Gogogo ROPOD (a.k.a START)! or Nononono stop that thing...
-    (a.k.a. STOP) or do it like Homer (a.k.a. PAUSE) followed by Lisa after checking the
-    pre-conditions (a.k.a. RESUME)... Hint: We want you to check the pre-conditions. Yes,
-    YOU!!!
-    """
-    PAUSE = u"PAUSE"
-    RESUME = u"RESUME"
-    START = u"START"
-    STOP = u"STOP"
+    CALL_ELEVATOR = u"CALL_ELEVATOR"
+    CANCEL_CALL = u"CANCEL_CALL"
+    CLOSE_DOORS_AFTER_ENTERING = u"CLOSE_DOORS_AFTER_ENTERING"
+    CLOSE_DOORS_AFTER_EXITING = u"CLOSE_DOORS_AFTER_EXITING"
 
 
 class MetamodelEnum(Enum):
@@ -151,36 +157,72 @@ class MetamodelEnum(Enum):
     ropod-cmd-schema.json. More specific Schemata will further specify what will be required
     here.
     
-    Metamodel identifier for command messages.
+    Metamodel identifier for an elevator command message.
     """
-    ROPOD_CMD_SCHEMA_JSON = u"ropod-cmd-schema.json"
+    ROPOD_ELEVATOR_CMD_SCHEMA_JSON = u"ropod-elevator-cmd-schema.json"
 
 
-class Payload:
-    """The actuall command to be issued."""
-    def __init__(self, metamodel, command, id):
+class OperationalMode(Enum):
+    """A NORMAL calls is exactly like pressing a button, while a ROBOT call will make the
+    elevetor wait ontil time out (50s) or the door close command is beeing issued.
+    """
+    NORMAL = u"NORMAL"
+    ROBOT = u"ROBOT"
+
+
+class ElevatorPayload:
+    """CALL_ELEVATOR command to call a single elevator, defined by elevatorId.
+    
+    CANCEL_CALL to cansel a single call. This has to be equally specied as a CALL_ELEVATOR
+    command.
+    
+    Close door after entering.
+    
+    Close door after exiting.
+    
+    A reply to a command, initcating if it was accepted. The same queryId will be returned.
+    """
+    def __init__(self, metamodel, command, elevator_id, goal_floor, operational_mode, query_id, start_floor, error_message, query_success):
         self.metamodel = metamodel
         self.command = command
-        self.id = id
+        self.elevator_id = elevator_id
+        self.goal_floor = goal_floor
+        self.operational_mode = operational_mode
+        self.query_id = query_id
+        self.start_floor = start_floor
+        self.error_message = error_message
+        self.query_success = query_success
 
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
         metamodel = MetamodelEnum(obj.get(u"metamodel"))
-        command = Command(obj.get(u"command"))
-        id = from_union([lambda x: UUID(x), from_none], obj.get(u"id"))
-        return Payload(metamodel, command, id)
+        command = from_union([Command, from_none], obj.get(u"command"))
+        elevator_id = from_union([from_int, from_none], obj.get(u"elevatorId"))
+        goal_floor = from_union([from_int, from_none], obj.get(u"goalFloor"))
+        operational_mode = from_union([OperationalMode, from_none], obj.get(u"operationalMode"))
+        query_id = UUID(obj.get(u"queryId"))
+        start_floor = from_union([from_int, from_none], obj.get(u"startFloor"))
+        error_message = from_union([from_str, from_none], obj.get(u"errorMessage"))
+        query_success = from_union([from_bool, from_none], obj.get(u"querySuccess"))
+        return ElevatorPayload(metamodel, command, elevator_id, goal_floor, operational_mode, query_id, start_floor, error_message, query_success)
 
     def to_dict(self):
         result = {}
         result[u"metamodel"] = to_enum(MetamodelEnum, self.metamodel)
-        result[u"command"] = to_enum(Command, self.command)
-        result[u"id"] = from_union([lambda x: str(x), from_none], self.id)
+        result[u"command"] = from_union([lambda x: to_enum(Command, x), from_none], self.command)
+        result[u"elevatorId"] = from_union([from_int, from_none], self.elevator_id)
+        result[u"goalFloor"] = from_union([from_int, from_none], self.goal_floor)
+        result[u"operationalMode"] = from_union([lambda x: to_enum(OperationalMode, x), from_none], self.operational_mode)
+        result[u"queryId"] = str(self.query_id)
+        result[u"startFloor"] = from_union([from_int, from_none], self.start_floor)
+        result[u"errorMessage"] = from_union([from_str, from_none], self.error_message)
+        result[u"querySuccess"] = from_union([from_bool, from_none], self.query_success)
         return result
 
 
-class RopodCmdSchema:
-    """Send a command (CMD) to a single or a group of ROPODS."""
+class RopodElevatorCmdSchema:
+    """Cammands to call an elevator"""
     def __init__(self, header, payload):
         self.header = header
         self.payload = payload
@@ -189,19 +231,19 @@ class RopodCmdSchema:
     def from_dict(obj):
         assert isinstance(obj, dict)
         header = Header.from_dict(obj.get(u"header"))
-        payload = from_union([Payload.from_dict, from_none], obj.get(u"payload"))
-        return RopodCmdSchema(header, payload)
+        payload = ElevatorPayload.from_dict(obj.get(u"payload"))
+        return RopodElevatorCmdSchema(header, payload)
 
     def to_dict(self):
         result = {}
         result[u"header"] = to_class(Header, self.header)
-        result[u"payload"] = from_union([lambda x: to_class(Payload, x), from_none], self.payload)
+        result[u"payload"] = to_class(ElevatorPayload, self.payload)
         return result
 
 
-def ropod_cmd_schema_from_dict(s):
-    return RopodCmdSchema.from_dict(s)
+def ropod_elevator_cmd_schema_from_dict(s):
+    return RopodElevatorCmdSchema.from_dict(s)
 
 
-def ropod_cmd_schema_to_dict(x):
-    return to_class(RopodCmdSchema, x)
+def ropod_elevator_cmd_schema_to_dict(x):
+    return to_class(RopodElevatorCmdSchema, x)

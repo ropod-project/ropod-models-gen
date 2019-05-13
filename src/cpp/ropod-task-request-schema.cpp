@@ -9,12 +9,15 @@
 
 #pragma once
 
+#include <boost/variant.hpp>
 #include "json.hpp"
 
 #include <boost/optional.hpp>
 #include <stdexcept>
 #include <regex>
 
+#ifndef NLOHMANN_OPT_HELPER
+#define NLOHMANN_OPT_HELPER
 namespace nlohmann {
     template <typename T>
     struct adl_serializer<std::shared_ptr<T>> {
@@ -27,6 +30,7 @@ namespace nlohmann {
         }
     };
 }
+#endif
 
 namespace quicktype {
     using nlohmann::json;
@@ -153,6 +157,8 @@ namespace quicktype {
      */
     enum class MsgMetamodel : int { ROPOD_MSG_SCHEMA_JSON };
 
+    using HeaderTimeStamp = std::shared_ptr<boost::variant<double, std::string>>;
+
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
      *
@@ -189,7 +195,7 @@ namespace quicktype {
         std::string msg_id;
         ClassMemberConstraints msg_id_constraint;
         std::shared_ptr<std::vector<std::string>> receiver_ids;
-        std::shared_ptr<std::string> timestamp;
+        HeaderTimeStamp timestamp;
         TypeEnum type;
         std::shared_ptr<std::string> version;
 
@@ -205,8 +211,8 @@ namespace quicktype {
         std::shared_ptr<std::vector<std::string>> get_receiver_ids() const { return receiver_ids; }
         void set_receiver_ids(std::shared_ptr<std::vector<std::string>> value) { this->receiver_ids = value; }
 
-        std::shared_ptr<std::string> get_timestamp() const { return timestamp; }
-        void set_timestamp(std::shared_ptr<std::string> value) { this->timestamp = value; }
+        HeaderTimeStamp get_timestamp() const { return timestamp; }
+        void set_timestamp(HeaderTimeStamp value) { this->timestamp = value; }
 
         const TypeEnum & get_type() const { return type; }
         TypeEnum & get_mutable_type() { return type; }
@@ -216,10 +222,12 @@ namespace quicktype {
         void set_version(std::shared_ptr<std::string> value) { this->version = value; }
     };
 
+    using PayloadTimeStamp = boost::variant<double, std::string>;
+
     /**
-     * All possible types of devices
+     * All possible types of loads that can be transported by ropods.
      */
-    enum class DeviceType : int { LAUNDRY, MOBIDIK, SICKBED };
+    enum class LoadType : int { LAUNDRY, MOBIDIK, SICKBED };
 
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
@@ -251,11 +259,15 @@ namespace quicktype {
 
         private:
         MetamodelEnum metamodel;
-        std::shared_ptr<std::string> device_id;
-        std::shared_ptr<DeviceType> device_type;
-        std::string drop_off_location;
-        std::string pick_up_location;
-        std::shared_ptr<std::string> start_time;
+        std::string delivery_location;
+        std::shared_ptr<int64_t> delivery_location_level;
+        PayloadTimeStamp earliest_start_time;
+        PayloadTimeStamp latest_start_time;
+        std::string load_id;
+        LoadType load_type;
+        std::string pickup_location;
+        std::shared_ptr<int64_t> pickup_location_level;
+        std::shared_ptr<int64_t> priority;
         std::string user_id;
 
         public:
@@ -263,22 +275,41 @@ namespace quicktype {
         MetamodelEnum & get_mutable_metamodel() { return metamodel; }
         void set_metamodel(const MetamodelEnum & value) { this->metamodel = value; }
 
-        std::shared_ptr<std::string> get_device_id() const { return device_id; }
-        void set_device_id(std::shared_ptr<std::string> value) { this->device_id = value; }
+        const std::string & get_delivery_location() const { return delivery_location; }
+        std::string & get_mutable_delivery_location() { return delivery_location; }
+        void set_delivery_location(const std::string & value) { this->delivery_location = value; }
 
-        std::shared_ptr<DeviceType> get_device_type() const { return device_type; }
-        void set_device_type(std::shared_ptr<DeviceType> value) { this->device_type = value; }
+        std::shared_ptr<int64_t> get_delivery_location_level() const { return delivery_location_level; }
+        void set_delivery_location_level(std::shared_ptr<int64_t> value) { this->delivery_location_level = value; }
 
-        const std::string & get_drop_off_location() const { return drop_off_location; }
-        std::string & get_mutable_drop_off_location() { return drop_off_location; }
-        void set_drop_off_location(const std::string & value) { this->drop_off_location = value; }
+        const PayloadTimeStamp & get_earliest_start_time() const { return earliest_start_time; }
+        PayloadTimeStamp & get_mutable_earliest_start_time() { return earliest_start_time; }
+        void set_earliest_start_time(const PayloadTimeStamp & value) { this->earliest_start_time = value; }
 
-        const std::string & get_pick_up_location() const { return pick_up_location; }
-        std::string & get_mutable_pick_up_location() { return pick_up_location; }
-        void set_pick_up_location(const std::string & value) { this->pick_up_location = value; }
+        const PayloadTimeStamp & get_latest_start_time() const { return latest_start_time; }
+        PayloadTimeStamp & get_mutable_latest_start_time() { return latest_start_time; }
+        void set_latest_start_time(const PayloadTimeStamp & value) { this->latest_start_time = value; }
 
-        std::shared_ptr<std::string> get_start_time() const { return start_time; }
-        void set_start_time(std::shared_ptr<std::string> value) { this->start_time = value; }
+        const std::string & get_load_id() const { return load_id; }
+        std::string & get_mutable_load_id() { return load_id; }
+        void set_load_id(const std::string & value) { this->load_id = value; }
+
+        const LoadType & get_load_type() const { return load_type; }
+        LoadType & get_mutable_load_type() { return load_type; }
+        void set_load_type(const LoadType & value) { this->load_type = value; }
+
+        const std::string & get_pickup_location() const { return pickup_location; }
+        std::string & get_mutable_pickup_location() { return pickup_location; }
+        void set_pickup_location(const std::string & value) { this->pickup_location = value; }
+
+        std::shared_ptr<int64_t> get_pickup_location_level() const { return pickup_location_level; }
+        void set_pickup_location_level(std::shared_ptr<int64_t> value) { this->pickup_location_level = value; }
+
+        /**
+         * This is the only optional parameter.
+         */
+        std::shared_ptr<int64_t> get_priority() const { return priority; }
+        void set_priority(std::shared_ptr<int64_t> value) { this->priority = value; }
 
         const std::string & get_user_id() const { return user_id; }
         std::string & get_mutable_user_id() { return user_id; }
@@ -323,17 +354,19 @@ namespace nlohmann {
     void from_json(const json & j, quicktype::TypeEnum & x);
     void to_json(json & j, const quicktype::TypeEnum & x);
 
-    void from_json(const json & j, quicktype::DeviceType & x);
-    void to_json(json & j, const quicktype::DeviceType & x);
+    void from_json(const json & j, quicktype::LoadType & x);
+    void to_json(json & j, const quicktype::LoadType & x);
 
     void from_json(const json & j, quicktype::MetamodelEnum & x);
     void to_json(json & j, const quicktype::MetamodelEnum & x);
+    void from_json(const json & j, boost::variant<double, std::string> & x);
+    void to_json(json & j, const boost::variant<double, std::string> & x);
 
     inline void from_json(const json & j, quicktype::Header& x) {
         x.set_metamodel(j.at("metamodel").get<quicktype::MsgMetamodel>());
         x.set_msg_id(j.at("msgId").get<std::string>());
         x.set_receiver_ids(quicktype::get_optional<std::vector<std::string>>(j, "receiverIds"));
-        x.set_timestamp(quicktype::get_optional<std::string>(j, "timestamp"));
+        x.set_timestamp(quicktype::get_optional<boost::variant<double, std::string>>(j, "timestamp"));
         x.set_type(j.at("type").get<quicktype::TypeEnum>());
         x.set_version(quicktype::get_optional<std::string>(j, "version"));
     }
@@ -350,22 +383,30 @@ namespace nlohmann {
 
     inline void from_json(const json & j, quicktype::Payload& x) {
         x.set_metamodel(j.at("metamodel").get<quicktype::MetamodelEnum>());
-        x.set_device_id(quicktype::get_optional<std::string>(j, "deviceId"));
-        x.set_device_type(quicktype::get_optional<quicktype::DeviceType>(j, "deviceType"));
-        x.set_drop_off_location(j.at("dropOffLocation").get<std::string>());
-        x.set_pick_up_location(j.at("pickUpLocation").get<std::string>());
-        x.set_start_time(quicktype::get_optional<std::string>(j, "startTime"));
+        x.set_delivery_location(j.at("deliveryLocation").get<std::string>());
+        x.set_delivery_location_level(quicktype::get_optional<int64_t>(j, "deliveryLocationLevel"));
+        x.set_earliest_start_time(j.at("earliestStartTime").get<quicktype::PayloadTimeStamp>());
+        x.set_latest_start_time(j.at("latestStartTime").get<quicktype::PayloadTimeStamp>());
+        x.set_load_id(j.at("loadId").get<std::string>());
+        x.set_load_type(j.at("loadType").get<quicktype::LoadType>());
+        x.set_pickup_location(j.at("pickupLocation").get<std::string>());
+        x.set_pickup_location_level(quicktype::get_optional<int64_t>(j, "pickupLocationLevel"));
+        x.set_priority(quicktype::get_optional<int64_t>(j, "priority"));
         x.set_user_id(j.at("userId").get<std::string>());
     }
 
     inline void to_json(json & j, const quicktype::Payload & x) {
         j = json::object();
         j["metamodel"] = x.get_metamodel();
-        j["deviceId"] = x.get_device_id();
-        j["deviceType"] = x.get_device_type();
-        j["dropOffLocation"] = x.get_drop_off_location();
-        j["pickUpLocation"] = x.get_pick_up_location();
-        j["startTime"] = x.get_start_time();
+        j["deliveryLocation"] = x.get_delivery_location();
+        j["deliveryLocationLevel"] = x.get_delivery_location_level();
+        j["earliestStartTime"] = x.get_earliest_start_time();
+        j["latestStartTime"] = x.get_latest_start_time();
+        j["loadId"] = x.get_load_id();
+        j["loadType"] = x.get_load_type();
+        j["pickupLocation"] = x.get_pickup_location();
+        j["pickupLocationLevel"] = x.get_pickup_location_level();
+        j["priority"] = x.get_priority();
         j["userId"] = x.get_user_id();
     }
 
@@ -404,18 +445,18 @@ namespace nlohmann {
         }
     }
 
-    inline void from_json(const json & j, quicktype::DeviceType & x) {
-        if (j == "laundry") x = quicktype::DeviceType::LAUNDRY;
-        else if (j == "mobidik") x = quicktype::DeviceType::MOBIDIK;
-        else if (j == "sickbed") x = quicktype::DeviceType::SICKBED;
+    inline void from_json(const json & j, quicktype::LoadType & x) {
+        if (j == "laundry") x = quicktype::LoadType::LAUNDRY;
+        else if (j == "mobidik") x = quicktype::LoadType::MOBIDIK;
+        else if (j == "sickbed") x = quicktype::LoadType::SICKBED;
         else throw "Input JSON does not conform to schema";
     }
 
-    inline void to_json(json & j, const quicktype::DeviceType & x) {
+    inline void to_json(json & j, const quicktype::LoadType & x) {
         switch (x) {
-            case quicktype::DeviceType::LAUNDRY: j = "laundry"; break;
-            case quicktype::DeviceType::MOBIDIK: j = "mobidik"; break;
-            case quicktype::DeviceType::SICKBED: j = "sickbed"; break;
+            case quicktype::LoadType::LAUNDRY: j = "laundry"; break;
+            case quicktype::LoadType::MOBIDIK: j = "mobidik"; break;
+            case quicktype::LoadType::SICKBED: j = "sickbed"; break;
             default: throw "This should not happen";
         }
     }
@@ -429,6 +470,25 @@ namespace nlohmann {
         switch (x) {
             case quicktype::MetamodelEnum::ROPOD_TASK_REQUEST_SCHEMA_JSON: j = "ropod-task-request-schema.json"; break;
             default: throw "This should not happen";
+        }
+    }
+    inline void from_json(const json & j, boost::variant<double, std::string> & x) {
+        if (j.is_number())
+            x = j.get<double>();
+        else if (j.is_string())
+            x = j.get<std::string>();
+        else throw "Could not deserialize";
+    }
+
+    inline void to_json(json & j, const boost::variant<double, std::string> & x) {
+        switch (x.which()) {
+            case 0:
+                j = boost::get<double>(x);
+                break;
+            case 1:
+                j = boost::get<std::string>(x);
+                break;
+            default: throw "Input JSON does not conform to schema";
         }
     }
 }

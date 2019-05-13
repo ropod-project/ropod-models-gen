@@ -15,7 +15,7 @@
 #
 # and then, to convert JSON from a string, do
 #
-#     result = ropod_msg_schema_from_dict(json.loads(json_string))
+#     result = ropod_black_box_logging_cmd_schema_from_dict(json.loads(json_string))
 
 from enum import Enum
 from uuid import UUID
@@ -76,8 +76,26 @@ class MsgMetamodel(Enum):
     ROPOD_MSG_SCHEMA_JSON = u"ropod-msg-schema.json"
 
 
+class GenericType(Enum):
+    """Id of receiver. Can be UUID or any string. This is optional.
+    
+    Type identifier for the payload. This is usually an enum like type. E.g. CMD. More
+    specific Schemata will further specify what will be required here.
+    
+    Version of message type. E.g. 0.1.0
+    
+    Metamodel identifier for the payload. This is usually a Schmea file like
+    ropod-cmd-schema.json. More specific Schemata will further specify what will be required
+    here.
+    """
+    BLACK_BOX_LOGGING_CMD = u"BLACK-BOX-LOGGING-CMD"
+
+
 class Header:
-    """Complete specification of required and optioanl header parts."""
+    """Complete specification of required and optioanl header parts.
+    
+    More specific definition (than the definition of ropod-msg-schema.json).
+    """
     def __init__(self, metamodel, msg_id, receiver_ids, timestamp, type, version):
         self.metamodel = metamodel
         self.msg_id = msg_id
@@ -93,7 +111,7 @@ class Header:
         msg_id = UUID(obj.get(u"msgId"))
         receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
         timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
-        type = from_str(obj.get(u"type"))
+        type = GenericType(obj.get(u"type"))
         version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
 
@@ -103,29 +121,36 @@ class Header:
         result[u"msgId"] = str(self.msg_id)
         result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
         result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
-        result[u"type"] = from_str(self.type)
+        result[u"type"] = to_enum(GenericType, self.type)
         result[u"version"] = from_union([from_str, from_none], self.version)
         return result
 
 
+class Cmd(Enum):
+    PAUSE = u"PAUSE"
+    START = u"START"
+    STOP = u"STOP"
+
+
 class Payload:
-    def __init__(self, metamodel):
-        self.metamodel = metamodel
+    """The actual command."""
+    def __init__(self, cmd):
+        self.cmd = cmd
 
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = from_str(obj.get(u"metamodel"))
-        return Payload(metamodel)
+        cmd = Cmd(obj.get(u"cmd"))
+        return Payload(cmd)
 
     def to_dict(self):
         result = {}
-        result[u"metamodel"] = from_str(self.metamodel)
+        result[u"cmd"] = to_enum(Cmd, self.cmd)
         return result
 
 
-class RopodMsgSchema:
-    """The generic ROPOD messages is composed of a header and payload section."""
+class RopodBlackBoxLoggingCmdSchema:
+    """Message for starting and stopping logging on the black box."""
     def __init__(self, header, payload):
         self.header = header
         self.payload = payload
@@ -135,7 +160,7 @@ class RopodMsgSchema:
         assert isinstance(obj, dict)
         header = Header.from_dict(obj.get(u"header"))
         payload = Payload.from_dict(obj.get(u"payload"))
-        return RopodMsgSchema(header, payload)
+        return RopodBlackBoxLoggingCmdSchema(header, payload)
 
     def to_dict(self):
         result = {}
@@ -144,9 +169,9 @@ class RopodMsgSchema:
         return result
 
 
-def ropod_msg_schema_from_dict(s):
-    return RopodMsgSchema.from_dict(s)
+def ropod_black_box_logging_cmd_schema_from_dict(s):
+    return RopodBlackBoxLoggingCmdSchema.from_dict(s)
 
 
-def ropod_msg_schema_to_dict(x):
-    return to_class(RopodMsgSchema, x)
+def ropod_black_box_logging_cmd_schema_to_dict(x):
+    return to_class(RopodBlackBoxLoggingCmdSchema, x)

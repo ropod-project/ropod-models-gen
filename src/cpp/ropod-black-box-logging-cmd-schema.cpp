@@ -5,7 +5,7 @@
 //
 //  Then include this file, and then do
 //
-//     RopodBlackBoxVariableQuerySchema data = nlohmann::json::parse(jsonString);
+//     RopodBlackBoxLoggingCmdSchema data = nlohmann::json::parse(jsonString);
 
 #pragma once
 
@@ -175,13 +175,12 @@ namespace quicktype {
      * ropod-cmd-schema.json. More specific Schemata will further specify what will be required
      * here.
      */
-    enum class GenericType : int { VARIABLE_QUERY };
+    enum class GenericType : int { BLACK_BOX_LOGGING_CMD };
 
     /**
      * Complete specification of required and optioanl header parts.
      *
-     * More spefific definition (than the definition of ropod-msg-schema.json). Only the type
-     * field is further specified.
+     * More specific definition (than the definition of ropod-msg-schema.json).
      */
     class Header {
         public:
@@ -222,8 +221,10 @@ namespace quicktype {
         void set_version(std::shared_ptr<std::string> value) { this->version = value; }
     };
 
+    enum class Cmd : int { PAUSE, START, STOP };
+
     /**
-     * Data associated with a black box variable query (e.g. who is requesting the data).
+     * The actual command.
      */
     class Payload {
         public:
@@ -231,26 +232,21 @@ namespace quicktype {
         virtual ~Payload() = default;
 
         private:
-        nlohmann::json black_box_id;
-        nlohmann::json sender_id;
+        Cmd cmd;
 
         public:
-        const nlohmann::json & get_black_box_id() const { return black_box_id; }
-        nlohmann::json & get_mutable_black_box_id() { return black_box_id; }
-        void set_black_box_id(const nlohmann::json & value) { this->black_box_id = value; }
-
-        const nlohmann::json & get_sender_id() const { return sender_id; }
-        nlohmann::json & get_mutable_sender_id() { return sender_id; }
-        void set_sender_id(const nlohmann::json & value) { this->sender_id = value; }
+        const Cmd & get_cmd() const { return cmd; }
+        Cmd & get_mutable_cmd() { return cmd; }
+        void set_cmd(const Cmd & value) { this->cmd = value; }
     };
 
     /**
-     * Find the names of all variables logged on a given black box
+     * Message for starting and stopping logging on the black box.
      */
-    class RopodBlackBoxVariableQuerySchema {
+    class RopodBlackBoxLoggingCmdSchema {
         public:
-        RopodBlackBoxVariableQuerySchema() = default;
-        virtual ~RopodBlackBoxVariableQuerySchema() = default;
+        RopodBlackBoxLoggingCmdSchema() = default;
+        virtual ~RopodBlackBoxLoggingCmdSchema() = default;
 
         private:
         Header header;
@@ -274,14 +270,17 @@ namespace nlohmann {
     void from_json(const json & j, quicktype::Payload & x);
     void to_json(json & j, const quicktype::Payload & x);
 
-    void from_json(const json & j, quicktype::RopodBlackBoxVariableQuerySchema & x);
-    void to_json(json & j, const quicktype::RopodBlackBoxVariableQuerySchema & x);
+    void from_json(const json & j, quicktype::RopodBlackBoxLoggingCmdSchema & x);
+    void to_json(json & j, const quicktype::RopodBlackBoxLoggingCmdSchema & x);
 
     void from_json(const json & j, quicktype::MsgMetamodel & x);
     void to_json(json & j, const quicktype::MsgMetamodel & x);
 
     void from_json(const json & j, quicktype::GenericType & x);
     void to_json(json & j, const quicktype::GenericType & x);
+
+    void from_json(const json & j, quicktype::Cmd & x);
+    void to_json(json & j, const quicktype::Cmd & x);
     void from_json(const json & j, boost::variant<double, std::string> & x);
     void to_json(json & j, const boost::variant<double, std::string> & x);
 
@@ -305,22 +304,20 @@ namespace nlohmann {
     }
 
     inline void from_json(const json & j, quicktype::Payload& x) {
-        x.set_black_box_id(quicktype::get_untyped(j, "blackBoxId"));
-        x.set_sender_id(quicktype::get_untyped(j, "senderId"));
+        x.set_cmd(j.at("cmd").get<quicktype::Cmd>());
     }
 
     inline void to_json(json & j, const quicktype::Payload & x) {
         j = json::object();
-        j["blackBoxId"] = x.get_black_box_id();
-        j["senderId"] = x.get_sender_id();
+        j["cmd"] = x.get_cmd();
     }
 
-    inline void from_json(const json & j, quicktype::RopodBlackBoxVariableQuerySchema& x) {
+    inline void from_json(const json & j, quicktype::RopodBlackBoxLoggingCmdSchema& x) {
         x.set_header(j.at("header").get<quicktype::Header>());
         x.set_payload(j.at("payload").get<quicktype::Payload>());
     }
 
-    inline void to_json(json & j, const quicktype::RopodBlackBoxVariableQuerySchema & x) {
+    inline void to_json(json & j, const quicktype::RopodBlackBoxLoggingCmdSchema & x) {
         j = json::object();
         j["header"] = x.get_header();
         j["payload"] = x.get_payload();
@@ -339,13 +336,29 @@ namespace nlohmann {
     }
 
     inline void from_json(const json & j, quicktype::GenericType & x) {
-        if (j == "VARIABLE-QUERY") x = quicktype::GenericType::VARIABLE_QUERY;
+        if (j == "BLACK-BOX-LOGGING-CMD") x = quicktype::GenericType::BLACK_BOX_LOGGING_CMD;
         else throw "Input JSON does not conform to schema";
     }
 
     inline void to_json(json & j, const quicktype::GenericType & x) {
         switch (x) {
-            case quicktype::GenericType::VARIABLE_QUERY: j = "VARIABLE-QUERY"; break;
+            case quicktype::GenericType::BLACK_BOX_LOGGING_CMD: j = "BLACK-BOX-LOGGING-CMD"; break;
+            default: throw "This should not happen";
+        }
+    }
+
+    inline void from_json(const json & j, quicktype::Cmd & x) {
+        if (j == "PAUSE") x = quicktype::Cmd::PAUSE;
+        else if (j == "START") x = quicktype::Cmd::START;
+        else if (j == "STOP") x = quicktype::Cmd::STOP;
+        else throw "Input JSON does not conform to schema";
+    }
+
+    inline void to_json(json & j, const quicktype::Cmd & x) {
+        switch (x) {
+            case quicktype::Cmd::PAUSE: j = "PAUSE"; break;
+            case quicktype::Cmd::START: j = "START"; break;
+            case quicktype::Cmd::STOP: j = "STOP"; break;
             default: throw "This should not happen";
         }
     }

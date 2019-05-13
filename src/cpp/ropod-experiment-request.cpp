@@ -9,12 +9,15 @@
 
 #pragma once
 
+#include <boost/variant.hpp>
 #include "json.hpp"
 
 #include <boost/optional.hpp>
 #include <stdexcept>
 #include <regex>
 
+#ifndef NLOHMANN_OPT_HELPER
+#define NLOHMANN_OPT_HELPER
 namespace nlohmann {
     template <typename T>
     struct adl_serializer<std::shared_ptr<T>> {
@@ -27,6 +30,7 @@ namespace nlohmann {
         }
     };
 }
+#endif
 
 namespace quicktype {
     using nlohmann::json;
@@ -153,6 +157,8 @@ namespace quicktype {
      */
     enum class MsgMetamodel : int { ROPOD_MSG_SCHEMA_JSON };
 
+    using TimeStamp = std::shared_ptr<boost::variant<double, std::string>>;
+
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
      *
@@ -169,7 +175,7 @@ namespace quicktype {
      * ropod-cmd-schema.json. More specific Schemata will further specify what will be required
      * here.
      */
-    enum class TimeStamp : int { EXPERIMENT_REQUEST };
+    enum class GenericType : int { EXPERIMENT_REQUEST };
 
     /**
      * Complete specification of required and optioanl header parts.
@@ -188,8 +194,8 @@ namespace quicktype {
         std::string msg_id;
         ClassMemberConstraints msg_id_constraint;
         std::shared_ptr<std::vector<std::string>> receiver_ids;
-        std::shared_ptr<std::string> timestamp;
-        TimeStamp type;
+        TimeStamp timestamp;
+        GenericType type;
         std::shared_ptr<std::string> version;
 
         public:
@@ -204,12 +210,12 @@ namespace quicktype {
         std::shared_ptr<std::vector<std::string>> get_receiver_ids() const { return receiver_ids; }
         void set_receiver_ids(std::shared_ptr<std::vector<std::string>> value) { this->receiver_ids = value; }
 
-        std::shared_ptr<std::string> get_timestamp() const { return timestamp; }
-        void set_timestamp(std::shared_ptr<std::string> value) { this->timestamp = value; }
+        TimeStamp get_timestamp() const { return timestamp; }
+        void set_timestamp(TimeStamp value) { this->timestamp = value; }
 
-        const TimeStamp & get_type() const { return type; }
-        TimeStamp & get_mutable_type() { return type; }
-        void set_type(const TimeStamp & value) { this->type = value; }
+        const GenericType & get_type() const { return type; }
+        GenericType & get_mutable_type() { return type; }
+        void set_type(const GenericType & value) { this->type = value; }
 
         std::shared_ptr<std::string> get_version() const { return version; }
         void set_version(std::shared_ptr<std::string> value) { this->version = value; }
@@ -268,15 +274,17 @@ namespace nlohmann {
     void from_json(const json & j, quicktype::MsgMetamodel & x);
     void to_json(json & j, const quicktype::MsgMetamodel & x);
 
-    void from_json(const json & j, quicktype::TimeStamp & x);
-    void to_json(json & j, const quicktype::TimeStamp & x);
+    void from_json(const json & j, quicktype::GenericType & x);
+    void to_json(json & j, const quicktype::GenericType & x);
+    void from_json(const json & j, boost::variant<double, std::string> & x);
+    void to_json(json & j, const boost::variant<double, std::string> & x);
 
     inline void from_json(const json & j, quicktype::Header& x) {
         x.set_metamodel(j.at("metamodel").get<quicktype::MsgMetamodel>());
         x.set_msg_id(j.at("msgId").get<std::string>());
         x.set_receiver_ids(quicktype::get_optional<std::vector<std::string>>(j, "receiverIds"));
-        x.set_timestamp(quicktype::get_optional<std::string>(j, "timestamp"));
-        x.set_type(j.at("type").get<quicktype::TimeStamp>());
+        x.set_timestamp(quicktype::get_optional<boost::variant<double, std::string>>(j, "timestamp"));
+        x.set_type(j.at("type").get<quicktype::GenericType>());
         x.set_version(quicktype::get_optional<std::string>(j, "version"));
     }
 
@@ -322,15 +330,34 @@ namespace nlohmann {
         }
     }
 
-    inline void from_json(const json & j, quicktype::TimeStamp & x) {
-        if (j == "EXPERIMENT-REQUEST") x = quicktype::TimeStamp::EXPERIMENT_REQUEST;
+    inline void from_json(const json & j, quicktype::GenericType & x) {
+        if (j == "EXPERIMENT-REQUEST") x = quicktype::GenericType::EXPERIMENT_REQUEST;
         else throw "Input JSON does not conform to schema";
     }
 
-    inline void to_json(json & j, const quicktype::TimeStamp & x) {
+    inline void to_json(json & j, const quicktype::GenericType & x) {
         switch (x) {
-            case quicktype::TimeStamp::EXPERIMENT_REQUEST: j = "EXPERIMENT-REQUEST"; break;
+            case quicktype::GenericType::EXPERIMENT_REQUEST: j = "EXPERIMENT-REQUEST"; break;
             default: throw "This should not happen";
+        }
+    }
+    inline void from_json(const json & j, boost::variant<double, std::string> & x) {
+        if (j.is_number())
+            x = j.get<double>();
+        else if (j.is_string())
+            x = j.get<std::string>();
+        else throw "Could not deserialize";
+    }
+
+    inline void to_json(json & j, const boost::variant<double, std::string> & x) {
+        switch (x.which()) {
+            case 0:
+                j = boost::get<double>(x);
+                break;
+            case 1:
+                j = boost::get<std::string>(x);
+                break;
+            default: throw "Input JSON does not conform to schema";
         }
     }
 }

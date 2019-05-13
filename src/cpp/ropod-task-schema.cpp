@@ -9,12 +9,15 @@
 
 #pragma once
 
+#include <boost/variant.hpp>
 #include "json.hpp"
 
 #include <boost/optional.hpp>
 #include <stdexcept>
 #include <regex>
 
+#ifndef NLOHMANN_OPT_HELPER
+#define NLOHMANN_OPT_HELPER
 namespace nlohmann {
     template <typename T>
     struct adl_serializer<std::shared_ptr<T>> {
@@ -27,6 +30,7 @@ namespace nlohmann {
         }
     };
 }
+#endif
 
 namespace quicktype {
     using nlohmann::json;
@@ -153,6 +157,8 @@ namespace quicktype {
      */
     enum class MsgMetamodel : int { ROPOD_MSG_SCHEMA_JSON };
 
+    using TimeStamp = std::shared_ptr<boost::variant<double, std::string>>;
+
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
      *
@@ -189,7 +195,7 @@ namespace quicktype {
         std::string msg_id;
         ClassMemberConstraints msg_id_constraint;
         std::shared_ptr<std::vector<std::string>> receiver_ids;
-        std::shared_ptr<std::string> timestamp;
+        TimeStamp timestamp;
         TypeEnum type;
         std::shared_ptr<std::string> version;
 
@@ -205,8 +211,8 @@ namespace quicktype {
         std::shared_ptr<std::vector<std::string>> get_receiver_ids() const { return receiver_ids; }
         void set_receiver_ids(std::shared_ptr<std::vector<std::string>> value) { this->receiver_ids = value; }
 
-        std::shared_ptr<std::string> get_timestamp() const { return timestamp; }
-        void set_timestamp(std::shared_ptr<std::string> value) { this->timestamp = value; }
+        TimeStamp get_timestamp() const { return timestamp; }
+        void set_timestamp(TimeStamp value) { this->timestamp = value; }
 
         const TypeEnum & get_type() const { return type; }
         TypeEnum & get_mutable_type() { return type; }
@@ -285,7 +291,7 @@ namespace quicktype {
         std::shared_ptr<GeometricNode> debug_waypoint;
         std::string id;
         ClassMemberConstraints id_constraint;
-        std::shared_ptr<std::string> name;
+        std::string name;
 
         public:
         std::shared_ptr<std::vector<GeometricNode>> get_debug_area_nodes() const { return debug_area_nodes; }
@@ -305,8 +311,9 @@ namespace quicktype {
          * Human readable name. This is not gauranteed to be unique. It is used for debugging and to
          * show it in a task report to a human user.
          */
-        std::shared_ptr<std::string> get_name() const { return name; }
-        void set_name(std::shared_ptr<std::string> value) { this->name = value; }
+        const std::string & get_name() const { return name; }
+        std::string & get_mutable_name() { return name; }
+        void set_name(const std::string & value) { this->name = value; }
     };
 
     /**
@@ -330,7 +337,7 @@ namespace quicktype {
         ClassMemberConstraints estimated_duration_constraint;
         std::shared_ptr<std::string> elevator_id;
         ClassMemberConstraints elevator_id_constraint;
-        std::shared_ptr<std::string> estimated_arrival_time;
+        TimeStamp estimated_arrival_time;
         std::shared_ptr<double> level;
         std::shared_ptr<double> goal_floor;
         std::shared_ptr<double> start_floor;
@@ -353,8 +360,8 @@ namespace quicktype {
         std::shared_ptr<std::string> get_elevator_id() const { return elevator_id; }
         void set_elevator_id(std::shared_ptr<std::string> value) { if (value) CheckConstraint("elevator_id", elevator_id_constraint, *value); this->elevator_id = value; }
 
-        std::shared_ptr<std::string> get_estimated_arrival_time() const { return estimated_arrival_time; }
-        void set_estimated_arrival_time(std::shared_ptr<std::string> value) { this->estimated_arrival_time = value; }
+        TimeStamp get_estimated_arrival_time() const { return estimated_arrival_time; }
+        void set_estimated_arrival_time(TimeStamp value) { this->estimated_arrival_time = value; }
 
         std::shared_ptr<double> get_level() const { return level; }
         void set_level(std::shared_ptr<double> value) { this->level = value; }
@@ -369,7 +376,7 @@ namespace quicktype {
     /**
      * All possible types of devices
      */
-    enum class DeviceType : int { LAUNDRY, MOBIDIK, SICKBED };
+    enum class LoadType : int { LAUNDRY, MOBIDIK, SICKBED };
 
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
@@ -404,8 +411,18 @@ namespace quicktype {
         private:
         MetamodelEnum metamodel;
         std::vector<Action> actions;
-        std::string device_id;
-        DeviceType device_type;
+        std::shared_ptr<std::string> delivery_location;
+        TimeStamp earliest_finish_time;
+        TimeStamp earliest_start_time;
+        TimeStamp finish_time;
+        TimeStamp latest_finish_time;
+        TimeStamp latest_start_time;
+        std::string load_id;
+        LoadType load_type;
+        std::shared_ptr<std::string> pickup_location;
+        std::shared_ptr<int64_t> priority;
+        TimeStamp start_time;
+        std::shared_ptr<std::string> status;
         std::string task_id;
         ClassMemberConstraints task_id_constraint;
         std::vector<std::string> team_robot_ids;
@@ -419,13 +436,43 @@ namespace quicktype {
         std::vector<Action> & get_mutable_actions() { return actions; }
         void set_actions(const std::vector<Action> & value) { this->actions = value; }
 
-        const std::string & get_device_id() const { return device_id; }
-        std::string & get_mutable_device_id() { return device_id; }
-        void set_device_id(const std::string & value) { this->device_id = value; }
+        std::shared_ptr<std::string> get_delivery_location() const { return delivery_location; }
+        void set_delivery_location(std::shared_ptr<std::string> value) { this->delivery_location = value; }
 
-        const DeviceType & get_device_type() const { return device_type; }
-        DeviceType & get_mutable_device_type() { return device_type; }
-        void set_device_type(const DeviceType & value) { this->device_type = value; }
+        TimeStamp get_earliest_finish_time() const { return earliest_finish_time; }
+        void set_earliest_finish_time(TimeStamp value) { this->earliest_finish_time = value; }
+
+        TimeStamp get_earliest_start_time() const { return earliest_start_time; }
+        void set_earliest_start_time(TimeStamp value) { this->earliest_start_time = value; }
+
+        TimeStamp get_finish_time() const { return finish_time; }
+        void set_finish_time(TimeStamp value) { this->finish_time = value; }
+
+        TimeStamp get_latest_finish_time() const { return latest_finish_time; }
+        void set_latest_finish_time(TimeStamp value) { this->latest_finish_time = value; }
+
+        TimeStamp get_latest_start_time() const { return latest_start_time; }
+        void set_latest_start_time(TimeStamp value) { this->latest_start_time = value; }
+
+        const std::string & get_load_id() const { return load_id; }
+        std::string & get_mutable_load_id() { return load_id; }
+        void set_load_id(const std::string & value) { this->load_id = value; }
+
+        const LoadType & get_load_type() const { return load_type; }
+        LoadType & get_mutable_load_type() { return load_type; }
+        void set_load_type(const LoadType & value) { this->load_type = value; }
+
+        std::shared_ptr<std::string> get_pickup_location() const { return pickup_location; }
+        void set_pickup_location(std::shared_ptr<std::string> value) { this->pickup_location = value; }
+
+        std::shared_ptr<int64_t> get_priority() const { return priority; }
+        void set_priority(std::shared_ptr<int64_t> value) { this->priority = value; }
+
+        TimeStamp get_start_time() const { return start_time; }
+        void set_start_time(TimeStamp value) { this->start_time = value; }
+
+        std::shared_ptr<std::string> get_status() const { return status; }
+        void set_status(std::shared_ptr<std::string> value) { this->status = value; }
 
         const std::string & get_task_id() const { return task_id; }
         std::string & get_mutable_task_id() { return task_id; }
@@ -489,17 +536,19 @@ namespace nlohmann {
     void from_json(const json & j, quicktype::LengthUnit & x);
     void to_json(json & j, const quicktype::LengthUnit & x);
 
-    void from_json(const json & j, quicktype::DeviceType & x);
-    void to_json(json & j, const quicktype::DeviceType & x);
+    void from_json(const json & j, quicktype::LoadType & x);
+    void to_json(json & j, const quicktype::LoadType & x);
 
     void from_json(const json & j, quicktype::MetamodelEnum & x);
     void to_json(json & j, const quicktype::MetamodelEnum & x);
+    void from_json(const json & j, boost::variant<double, std::string> & x);
+    void to_json(json & j, const boost::variant<double, std::string> & x);
 
     inline void from_json(const json & j, quicktype::Header& x) {
         x.set_metamodel(j.at("metamodel").get<quicktype::MsgMetamodel>());
         x.set_msg_id(j.at("msgId").get<std::string>());
         x.set_receiver_ids(quicktype::get_optional<std::vector<std::string>>(j, "receiverIds"));
-        x.set_timestamp(quicktype::get_optional<std::string>(j, "timestamp"));
+        x.set_timestamp(quicktype::get_optional<boost::variant<double, std::string>>(j, "timestamp"));
         x.set_type(j.at("type").get<quicktype::TypeEnum>());
         x.set_version(quicktype::get_optional<std::string>(j, "version"));
     }
@@ -537,7 +586,7 @@ namespace nlohmann {
         x.set_debug_area_nodes(quicktype::get_optional<std::vector<quicktype::GeometricNode>>(j, "debugAreaNodes"));
         x.set_debug_waypoint(quicktype::get_optional<quicktype::GeometricNode>(j, "debugWaypoint"));
         x.set_id(j.at("id").get<std::string>());
-        x.set_name(quicktype::get_optional<std::string>(j, "name"));
+        x.set_name(j.at("name").get<std::string>());
     }
 
     inline void to_json(json & j, const quicktype::TopologicNode & x) {
@@ -554,7 +603,7 @@ namespace nlohmann {
         x.set_areas(quicktype::get_optional<std::vector<quicktype::TopologicNode>>(j, "areas"));
         x.set_estimated_duration(quicktype::get_optional<std::string>(j, "estimatedDuration"));
         x.set_elevator_id(quicktype::get_optional<std::string>(j, "elevatorId"));
-        x.set_estimated_arrival_time(quicktype::get_optional<std::string>(j, "estimatedArrivalTime"));
+        x.set_estimated_arrival_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "estimatedArrivalTime"));
         x.set_level(quicktype::get_optional<double>(j, "level"));
         x.set_goal_floor(quicktype::get_optional<double>(j, "goalFloor"));
         x.set_start_floor(quicktype::get_optional<double>(j, "startFloor"));
@@ -576,8 +625,18 @@ namespace nlohmann {
     inline void from_json(const json & j, quicktype::Payload& x) {
         x.set_metamodel(j.at("metamodel").get<quicktype::MetamodelEnum>());
         x.set_actions(j.at("actions").get<std::vector<quicktype::Action>>());
-        x.set_device_id(j.at("deviceId").get<std::string>());
-        x.set_device_type(j.at("deviceType").get<quicktype::DeviceType>());
+        x.set_delivery_location(quicktype::get_optional<std::string>(j, "deliveryLocation"));
+        x.set_earliest_finish_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "earliestFinishTime"));
+        x.set_earliest_start_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "earliestStartTime"));
+        x.set_finish_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "finishTime"));
+        x.set_latest_finish_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "latestFinishTime"));
+        x.set_latest_start_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "latestStartTime"));
+        x.set_load_id(j.at("loadId").get<std::string>());
+        x.set_load_type(j.at("loadType").get<quicktype::LoadType>());
+        x.set_pickup_location(quicktype::get_optional<std::string>(j, "pickupLocation"));
+        x.set_priority(quicktype::get_optional<int64_t>(j, "priority"));
+        x.set_start_time(quicktype::get_optional<boost::variant<double, std::string>>(j, "startTime"));
+        x.set_status(quicktype::get_optional<std::string>(j, "status"));
         x.set_task_id(j.at("taskId").get<std::string>());
         x.set_team_robot_ids(j.at("teamRobotIds").get<std::vector<std::string>>());
     }
@@ -586,8 +645,18 @@ namespace nlohmann {
         j = json::object();
         j["metamodel"] = x.get_metamodel();
         j["actions"] = x.get_actions();
-        j["deviceId"] = x.get_device_id();
-        j["deviceType"] = x.get_device_type();
+        j["deliveryLocation"] = x.get_delivery_location();
+        j["earliestFinishTime"] = x.get_earliest_finish_time();
+        j["earliestStartTime"] = x.get_earliest_start_time();
+        j["finishTime"] = x.get_finish_time();
+        j["latestFinishTime"] = x.get_latest_finish_time();
+        j["latestStartTime"] = x.get_latest_start_time();
+        j["loadId"] = x.get_load_id();
+        j["loadType"] = x.get_load_type();
+        j["pickupLocation"] = x.get_pickup_location();
+        j["priority"] = x.get_priority();
+        j["startTime"] = x.get_start_time();
+        j["status"] = x.get_status();
         j["taskId"] = x.get_task_id();
         j["teamRobotIds"] = x.get_team_robot_ids();
     }
@@ -669,18 +738,18 @@ namespace nlohmann {
         }
     }
 
-    inline void from_json(const json & j, quicktype::DeviceType & x) {
-        if (j == "laundry") x = quicktype::DeviceType::LAUNDRY;
-        else if (j == "mobidik") x = quicktype::DeviceType::MOBIDIK;
-        else if (j == "sickbed") x = quicktype::DeviceType::SICKBED;
+    inline void from_json(const json & j, quicktype::LoadType & x) {
+        if (j == "laundry") x = quicktype::LoadType::LAUNDRY;
+        else if (j == "mobidik") x = quicktype::LoadType::MOBIDIK;
+        else if (j == "sickbed") x = quicktype::LoadType::SICKBED;
         else throw "Input JSON does not conform to schema";
     }
 
-    inline void to_json(json & j, const quicktype::DeviceType & x) {
+    inline void to_json(json & j, const quicktype::LoadType & x) {
         switch (x) {
-            case quicktype::DeviceType::LAUNDRY: j = "laundry"; break;
-            case quicktype::DeviceType::MOBIDIK: j = "mobidik"; break;
-            case quicktype::DeviceType::SICKBED: j = "sickbed"; break;
+            case quicktype::LoadType::LAUNDRY: j = "laundry"; break;
+            case quicktype::LoadType::MOBIDIK: j = "mobidik"; break;
+            case quicktype::LoadType::SICKBED: j = "sickbed"; break;
             default: throw "This should not happen";
         }
     }
@@ -694,6 +763,25 @@ namespace nlohmann {
         switch (x) {
             case quicktype::MetamodelEnum::ROPOD_TASK_SCHEMA_JSON: j = "ropod-task-schema.json"; break;
             default: throw "This should not happen";
+        }
+    }
+    inline void from_json(const json & j, boost::variant<double, std::string> & x) {
+        if (j.is_number())
+            x = j.get<double>();
+        else if (j.is_string())
+            x = j.get<std::string>();
+        else throw "Could not deserialize";
+    }
+
+    inline void to_json(json & j, const boost::variant<double, std::string> & x) {
+        switch (x.which()) {
+            case 0:
+                j = boost::get<double>(x);
+                break;
+            case 1:
+                j = boost::get<std::string>(x);
+                break;
+            default: throw "Input JSON does not conform to schema";
         }
     }
 }
