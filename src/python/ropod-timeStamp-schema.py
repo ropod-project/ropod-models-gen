@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # This code parses date/times, so please
 #
 #     pip install python-dateutil

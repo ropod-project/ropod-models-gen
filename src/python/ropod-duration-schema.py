@@ -1,5 +1,3 @@
-# coding: utf-8
-
 # To use this code, make sure you
 #
 #     import json
@@ -10,7 +8,7 @@
 
 
 def from_str(x):
-    assert isinstance(x, (str, unicode))
+    assert isinstance(x, str)
     return x
 
 
