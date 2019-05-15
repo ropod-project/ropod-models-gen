@@ -1,3 +1,10 @@
+# coding: utf-8
+
+#
+# To use this code in Python 2.7 you'll have to
+#
+#     pip install enum34
+
 # This code parses date/times, so please
 #
 #     pip install python-dateutil
@@ -22,7 +29,7 @@ def from_list(f, x):
 
 
 def from_str(x):
-    assert isinstance(x, str)
+    assert isinstance(x, (str, unicode))
     return x
 
 
@@ -66,7 +73,7 @@ def to_class(c, x):
 
 class MsgMetamodel(Enum):
     """Metamodel identifier for a generic  messages. It actually points to this Schema."""
-    ROPOD_MSG_SCHEMA_JSON = "ropod-msg-schema.json"
+    ROPOD_MSG_SCHEMA_JSON = u"ropod-msg-schema.json"
 
 
 class TypeEnum(Enum):
@@ -81,7 +88,7 @@ class TypeEnum(Enum):
     ropod-cmd-schema.json. More specific Schemata will further specify what will be required
     here.
     """
-    CMD = "CMD"
+    CMD = u"CMD"
 
 
 class Header:
@@ -101,22 +108,22 @@ class Header:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = MsgMetamodel(obj.get("metamodel"))
-        msg_id = UUID(obj.get("msgId"))
-        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get("receiverIds"))
-        timestamp = from_union([from_float, from_datetime, from_none], obj.get("timestamp"))
-        type = TypeEnum(obj.get("type"))
-        version = from_union([from_str, from_none], obj.get("version"))
+        metamodel = MsgMetamodel(obj.get(u"metamodel"))
+        msg_id = UUID(obj.get(u"msgId"))
+        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
+        timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
+        type = TypeEnum(obj.get(u"type"))
+        version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = to_enum(MsgMetamodel, self.metamodel)
-        result["msgId"] = str(self.msg_id)
-        result["receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
-        result["timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
-        result["type"] = to_enum(TypeEnum, self.type)
-        result["version"] = from_union([from_str, from_none], self.version)
+        result[u"metamodel"] = to_enum(MsgMetamodel, self.metamodel)
+        result[u"msgId"] = str(self.msg_id)
+        result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
+        result[u"type"] = to_enum(TypeEnum, self.type)
+        result[u"version"] = from_union([from_str, from_none], self.version)
         return result
 
 
@@ -126,10 +133,10 @@ class Command(Enum):
     pre-conditions (a.k.a. RESUME)... Hint: We want you to check the pre-conditions. Yes,
     YOU!!!
     """
-    PAUSE = "PAUSE"
-    RESUME = "RESUME"
-    START = "START"
-    STOP = "STOP"
+    PAUSE = u"PAUSE"
+    RESUME = u"RESUME"
+    START = u"START"
+    STOP = u"STOP"
 
 
 class MetamodelEnum(Enum):
@@ -146,7 +153,7 @@ class MetamodelEnum(Enum):
     
     Metamodel identifier for command messages.
     """
-    ROPOD_CMD_SCHEMA_JSON = "ropod-cmd-schema.json"
+    ROPOD_CMD_SCHEMA_JSON = u"ropod-cmd-schema.json"
 
 
 class Payload:
@@ -159,16 +166,16 @@ class Payload:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = MetamodelEnum(obj.get("metamodel"))
-        command = Command(obj.get("command"))
-        id = from_union([lambda x: UUID(x), from_none], obj.get("id"))
+        metamodel = MetamodelEnum(obj.get(u"metamodel"))
+        command = Command(obj.get(u"command"))
+        id = from_union([lambda x: UUID(x), from_none], obj.get(u"id"))
         return Payload(metamodel, command, id)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = to_enum(MetamodelEnum, self.metamodel)
-        result["command"] = to_enum(Command, self.command)
-        result["id"] = from_union([lambda x: str(x), from_none], self.id)
+        result[u"metamodel"] = to_enum(MetamodelEnum, self.metamodel)
+        result[u"command"] = to_enum(Command, self.command)
+        result[u"id"] = from_union([lambda x: str(x), from_none], self.id)
         return result
 
 
@@ -181,14 +188,14 @@ class RopodCmdSchema:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        header = Header.from_dict(obj.get("header"))
-        payload = from_union([Payload.from_dict, from_none], obj.get("payload"))
+        header = Header.from_dict(obj.get(u"header"))
+        payload = from_union([Payload.from_dict, from_none], obj.get(u"payload"))
         return RopodCmdSchema(header, payload)
 
     def to_dict(self):
         result = {}
-        result["header"] = to_class(Header, self.header)
-        result["payload"] = from_union([lambda x: to_class(Payload, x), from_none], self.payload)
+        result[u"header"] = to_class(Header, self.header)
+        result[u"payload"] = from_union([lambda x: to_class(Payload, x), from_none], self.payload)
         return result
 
 

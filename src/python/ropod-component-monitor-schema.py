@@ -1,3 +1,10 @@
+# coding: utf-8
+
+#
+# To use this code in Python 2.7 you'll have to
+#
+#     pip install enum34
+
 # This code parses date/times, so please
 #
 #     pip install python-dateutil
@@ -22,7 +29,7 @@ def from_list(f, x):
 
 
 def from_str(x):
-    assert isinstance(x, str)
+    assert isinstance(x, (str, unicode))
     return x
 
 
@@ -71,7 +78,7 @@ def to_class(c, x):
 
 class MsgMetamodel(Enum):
     """Metamodel identifier for a generic  messages. It actually points to this Schema."""
-    ROPOD_MSG_SCHEMA_JSON = "ropod-msg-schema.json"
+    ROPOD_MSG_SCHEMA_JSON = u"ropod-msg-schema.json"
 
 
 class GenericType(Enum):
@@ -86,7 +93,7 @@ class GenericType(Enum):
     ropod-cmd-schema.json. More specific Schemata will further specify what will be required
     here.
     """
-    HEALTH_STATUS = "HEALTH-STATUS"
+    HEALTH_STATUS = u"HEALTH-STATUS"
 
 
 class Header:
@@ -106,22 +113,22 @@ class Header:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = MsgMetamodel(obj.get("metamodel"))
-        msg_id = UUID(obj.get("msgId"))
-        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get("receiverIds"))
-        timestamp = from_union([from_float, from_datetime, from_none], obj.get("timestamp"))
-        type = GenericType(obj.get("type"))
-        version = from_union([from_str, from_none], obj.get("version"))
+        metamodel = MsgMetamodel(obj.get(u"metamodel"))
+        msg_id = UUID(obj.get(u"msgId"))
+        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
+        timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
+        type = GenericType(obj.get(u"type"))
+        version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = to_enum(MsgMetamodel, self.metamodel)
-        result["msgId"] = str(self.msg_id)
-        result["receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
-        result["timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
-        result["type"] = to_enum(GenericType, self.type)
-        result["version"] = from_union([from_str, from_none], self.version)
+        result[u"metamodel"] = to_enum(MsgMetamodel, self.metamodel)
+        result[u"msgId"] = str(self.msg_id)
+        result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
+        result[u"type"] = to_enum(GenericType, self.type)
+        result[u"version"] = from_union([from_str, from_none], self.version)
         return result
 
 
@@ -137,14 +144,14 @@ class Mode:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        health_status = from_dict(lambda x: x, obj.get("healthStatus"))
-        monitor_description = from_str(obj.get("monitorDescription"))
+        health_status = from_dict(lambda x: x, obj.get(u"healthStatus"))
+        monitor_description = from_str(obj.get(u"monitorDescription"))
         return Mode(health_status, monitor_description)
 
     def to_dict(self):
         result = {}
-        result["healthStatus"] = from_dict(lambda x: x, self.health_status)
-        result["monitorDescription"] = from_str(self.monitor_description)
+        result[u"healthStatus"] = from_dict(lambda x: x, self.health_status)
+        result[u"monitorDescription"] = from_str(self.monitor_description)
         return result
 
 
@@ -160,14 +167,14 @@ class Monitor:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        component = from_str(obj.get("component"))
-        modes = from_list(Mode.from_dict, obj.get("modes"))
+        component = from_str(obj.get(u"component"))
+        modes = from_list(Mode.from_dict, obj.get(u"modes"))
         return Monitor(component, modes)
 
     def to_dict(self):
         result = {}
-        result["component"] = from_str(self.component)
-        result["modes"] = from_list(lambda x: to_class(Mode, x), self.modes)
+        result[u"component"] = from_str(self.component)
+        result[u"modes"] = from_list(lambda x: to_class(Mode, x), self.modes)
         return result
 
 
@@ -181,16 +188,16 @@ class Payload:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = from_str(obj.get("metamodel"))
-        monitors = from_list(Monitor.from_dict, obj.get("monitors"))
-        ropod_id = UUID(obj.get("ropodId"))
+        metamodel = from_str(obj.get(u"metamodel"))
+        monitors = from_list(Monitor.from_dict, obj.get(u"monitors"))
+        ropod_id = UUID(obj.get(u"ropodId"))
         return Payload(metamodel, monitors, ropod_id)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = from_str(self.metamodel)
-        result["monitors"] = from_list(lambda x: to_class(Monitor, x), self.monitors)
-        result["ropodId"] = str(self.ropod_id)
+        result[u"metamodel"] = from_str(self.metamodel)
+        result[u"monitors"] = from_list(lambda x: to_class(Monitor, x), self.monitors)
+        result[u"ropodId"] = str(self.ropod_id)
         return result
 
 
@@ -203,14 +210,14 @@ class RopodComponentMonitorSchema:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        header = Header.from_dict(obj.get("header"))
-        payload = Payload.from_dict(obj.get("payload"))
+        header = Header.from_dict(obj.get(u"header"))
+        payload = Payload.from_dict(obj.get(u"payload"))
         return RopodComponentMonitorSchema(header, payload)
 
     def to_dict(self):
         result = {}
-        result["header"] = to_class(Header, self.header)
-        result["payload"] = to_class(Payload, self.payload)
+        result[u"header"] = to_class(Header, self.header)
+        result[u"payload"] = to_class(Payload, self.payload)
         return result
 
 

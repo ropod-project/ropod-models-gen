@@ -1,3 +1,10 @@
+# coding: utf-8
+
+#
+# To use this code in Python 2.7 you'll have to
+#
+#     pip install enum34
+
 # To use this code, make sure you
 #
 #     import json
@@ -45,43 +52,43 @@ def to_class(c, x):
 
 class Unit(Enum):
     """Here the case sensitive version of degree is included for convenience as well."""
-    A = "a"
-    C = "°C"
-    CM = "cm"
-    D = "d"
-    DEG = "deg"
-    DEG_S = "deg/s"
-    DM = "dm"
-    EMPTY = "°"
-    F = "°F"
-    FG = "fg"
-    G = "g"
-    H = "h"
-    K = "K"
-    KG = "kg"
-    KM = "km"
-    KM_H = "km/h"
-    M = "m"
-    MG = "mg"
-    MIN = "min"
-    MM = "mm"
-    MO = "mo"
-    MS = "ms"
-    M_S = "m/s"
-    NG = "ng"
-    NM = "nm"
-    NS = "ns"
-    PG = "pg"
-    PS = "ps"
-    RAD = "rad"
-    RAD_S = "rad/s"
-    S = "s"
-    T = "t"
-    UG = "ug"
-    UM = "um"
-    UNIT_S = "°/s"
-    US = "us"
-    WK = "wk"
+    A = u"a"
+    C = u"°C"
+    CM = u"cm"
+    D = u"d"
+    DEG = u"deg"
+    DEG_S = u"deg/s"
+    DM = u"dm"
+    EMPTY = u"°"
+    F = u"°F"
+    FG = u"fg"
+    G = u"g"
+    H = u"h"
+    K = u"K"
+    KG = u"kg"
+    KM = u"km"
+    KM_H = u"km/h"
+    M = u"m"
+    MG = u"mg"
+    MIN = u"min"
+    MM = u"mm"
+    MO = u"mo"
+    MS = u"ms"
+    M_S = u"m/s"
+    NG = u"ng"
+    NM = u"nm"
+    NS = u"ns"
+    PG = u"pg"
+    PS = u"ps"
+    RAD = u"rad"
+    RAD_S = u"rad/s"
+    S = u"s"
+    T = u"t"
+    UG = u"ug"
+    UM = u"um"
+    UNIT_S = u"°/s"
+    US = u"us"
+    WK = u"wk"
 
 
 class RopodUnitsSchema:
@@ -97,14 +104,14 @@ class RopodUnitsSchema:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        unit = from_union([Unit, from_none], obj.get("unit"))
-        value = from_union([from_float, from_none], obj.get("value"))
+        unit = from_union([Unit, from_none], obj.get(u"unit"))
+        value = from_union([from_float, from_none], obj.get(u"value"))
         return RopodUnitsSchema(unit, value)
 
     def to_dict(self):
         result = {}
-        result["unit"] = from_union([lambda x: to_enum(Unit, x), from_none], self.unit)
-        result["value"] = from_union([to_float, from_none], self.value)
+        result[u"unit"] = from_union([lambda x: to_enum(Unit, x), from_none], self.unit)
+        result[u"value"] = from_union([to_float, from_none], self.value)
         return result
 
 

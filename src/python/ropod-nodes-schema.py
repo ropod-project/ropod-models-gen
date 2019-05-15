@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # To use this code, make sure you
 #
 #     import json

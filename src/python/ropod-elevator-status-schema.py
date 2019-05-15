@@ -1,3 +1,10 @@
+# coding: utf-8
+
+#
+# To use this code in Python 2.7 you'll have to
+#
+#     pip install enum34
+
 # This code parses date/times, so please
 #
 #     pip install python-dateutil
@@ -22,7 +29,7 @@ def from_list(f, x):
 
 
 def from_str(x):
-    assert isinstance(x, str)
+    assert isinstance(x, (str, unicode))
     return x
 
 
@@ -76,7 +83,7 @@ def to_class(c, x):
 
 class MsgMetamodel(Enum):
     """Metamodel identifier for a generic  messages. It actually points to this Schema."""
-    ROPOD_MSG_SCHEMA_JSON = "ropod-msg-schema.json"
+    ROPOD_MSG_SCHEMA_JSON = u"ropod-msg-schema.json"
 
 
 class TypeEnum(Enum):
@@ -91,8 +98,8 @@ class TypeEnum(Enum):
     ropod-cmd-schema.json. More specific Schemata will further specify what will be required
     here.
     """
-    ELEVATOR_STATUS = "ELEVATOR-STATUS"
-    ELEVATOR_STATUS_QUERY = "ELEVATOR-STATUS-QUERY"
+    ELEVATOR_STATUS = u"ELEVATOR-STATUS"
+    ELEVATOR_STATUS_QUERY = u"ELEVATOR-STATUS-QUERY"
 
 
 class Header:
@@ -112,22 +119,22 @@ class Header:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = MsgMetamodel(obj.get("metamodel"))
-        msg_id = UUID(obj.get("msgId"))
-        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get("receiverIds"))
-        timestamp = from_union([from_float, from_datetime, from_none], obj.get("timestamp"))
-        type = TypeEnum(obj.get("type"))
-        version = from_union([from_str, from_none], obj.get("version"))
+        metamodel = MsgMetamodel(obj.get(u"metamodel"))
+        msg_id = UUID(obj.get(u"msgId"))
+        receiver_ids = from_union([lambda x: from_list(from_str, x), from_none], obj.get(u"receiverIds"))
+        timestamp = from_union([from_float, from_datetime, from_none], obj.get(u"timestamp"))
+        type = TypeEnum(obj.get(u"type"))
+        version = from_union([from_str, from_none], obj.get(u"version"))
         return Header(metamodel, msg_id, receiver_ids, timestamp, type, version)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = to_enum(MsgMetamodel, self.metamodel)
-        result["msgId"] = str(self.msg_id)
-        result["receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
-        result["timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
-        result["type"] = to_enum(TypeEnum, self.type)
-        result["version"] = from_union([from_str, from_none], self.version)
+        result[u"metamodel"] = to_enum(MsgMetamodel, self.metamodel)
+        result[u"msgId"] = str(self.msg_id)
+        result[u"receiverIds"] = from_union([lambda x: from_list(from_str, x), from_none], self.receiver_ids)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat(), from_none], self.timestamp)
+        result[u"type"] = to_enum(TypeEnum, self.type)
+        result[u"version"] = from_union([from_str, from_none], self.version)
         return result
 
 
@@ -145,12 +152,12 @@ class MetamodelEnum(Enum):
     
     Metamodel elevator status message.
     """
-    ROPOD_ELEVATOR_STATUS_SCHEMA_JSON = "ropod-elevator-status-schema.json"
+    ROPOD_ELEVATOR_STATUS_SCHEMA_JSON = u"ropod-elevator-status-schema.json"
 
 
 class Query(Enum):
-    GET_ALL_ELEVATOR_IDS = "GET_ALL_ELEVATOR_IDS"
-    GET_ELEVATOR_STATUS = "GET_ELEVATOR_STATUS"
+    GET_ALL_ELEVATOR_IDS = u"GET_ALL_ELEVATOR_IDS"
+    GET_ELEVATOR_STATUS = u"GET_ELEVATOR_STATUS"
 
 
 class ElevatorStatusPayload:
@@ -176,38 +183,38 @@ class ElevatorStatusPayload:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        metamodel = MetamodelEnum(obj.get("metamodel"))
-        admitted_request_from_robot = from_union([from_bool, from_none], obj.get("admittedRequestFromRobot"))
-        calls = from_union([from_int, from_none], obj.get("calls"))
-        door_open_at_goal_floor = from_union([from_bool, from_none], obj.get("doorOpenAtGoalFloor"))
-        door_open_at_start_floor = from_union([from_bool, from_none], obj.get("doorOpenAtStartFloor"))
-        door_waits_for_closing_command = from_union([from_bool, from_none], obj.get("doorWaitsForClosingCommand"))
-        elevator_ids = from_union([lambda x: from_list(from_int, x), from_none], obj.get("elevatorIds"))
-        floor = from_union([from_int, from_none], obj.get("floor"))
-        id = from_union([from_int, from_none], obj.get("id"))
-        is_available = from_union([from_bool, from_none], obj.get("isAvailable"))
-        query_id = from_union([lambda x: UUID(x), from_none], obj.get("queryId"))
-        query_success = from_union([from_bool, from_none], obj.get("querySuccess"))
-        status_has_changed = from_union([from_bool, from_none], obj.get("statusHasChanged"))
-        query = from_union([Query, from_none], obj.get("query"))
+        metamodel = MetamodelEnum(obj.get(u"metamodel"))
+        admitted_request_from_robot = from_union([from_bool, from_none], obj.get(u"admittedRequestFromRobot"))
+        calls = from_union([from_int, from_none], obj.get(u"calls"))
+        door_open_at_goal_floor = from_union([from_bool, from_none], obj.get(u"doorOpenAtGoalFloor"))
+        door_open_at_start_floor = from_union([from_bool, from_none], obj.get(u"doorOpenAtStartFloor"))
+        door_waits_for_closing_command = from_union([from_bool, from_none], obj.get(u"doorWaitsForClosingCommand"))
+        elevator_ids = from_union([lambda x: from_list(from_int, x), from_none], obj.get(u"elevatorIds"))
+        floor = from_union([from_int, from_none], obj.get(u"floor"))
+        id = from_union([from_int, from_none], obj.get(u"id"))
+        is_available = from_union([from_bool, from_none], obj.get(u"isAvailable"))
+        query_id = from_union([lambda x: UUID(x), from_none], obj.get(u"queryId"))
+        query_success = from_union([from_bool, from_none], obj.get(u"querySuccess"))
+        status_has_changed = from_union([from_bool, from_none], obj.get(u"statusHasChanged"))
+        query = from_union([Query, from_none], obj.get(u"query"))
         return ElevatorStatusPayload(metamodel, admitted_request_from_robot, calls, door_open_at_goal_floor, door_open_at_start_floor, door_waits_for_closing_command, elevator_ids, floor, id, is_available, query_id, query_success, status_has_changed, query)
 
     def to_dict(self):
         result = {}
-        result["metamodel"] = to_enum(MetamodelEnum, self.metamodel)
-        result["admittedRequestFromRobot"] = from_union([from_bool, from_none], self.admitted_request_from_robot)
-        result["calls"] = from_union([from_int, from_none], self.calls)
-        result["doorOpenAtGoalFloor"] = from_union([from_bool, from_none], self.door_open_at_goal_floor)
-        result["doorOpenAtStartFloor"] = from_union([from_bool, from_none], self.door_open_at_start_floor)
-        result["doorWaitsForClosingCommand"] = from_union([from_bool, from_none], self.door_waits_for_closing_command)
-        result["elevatorIds"] = from_union([lambda x: from_list(from_int, x), from_none], self.elevator_ids)
-        result["floor"] = from_union([from_int, from_none], self.floor)
-        result["id"] = from_union([from_int, from_none], self.id)
-        result["isAvailable"] = from_union([from_bool, from_none], self.is_available)
-        result["queryId"] = from_union([lambda x: str(x), from_none], self.query_id)
-        result["querySuccess"] = from_union([from_bool, from_none], self.query_success)
-        result["statusHasChanged"] = from_union([from_bool, from_none], self.status_has_changed)
-        result["query"] = from_union([lambda x: to_enum(Query, x), from_none], self.query)
+        result[u"metamodel"] = to_enum(MetamodelEnum, self.metamodel)
+        result[u"admittedRequestFromRobot"] = from_union([from_bool, from_none], self.admitted_request_from_robot)
+        result[u"calls"] = from_union([from_int, from_none], self.calls)
+        result[u"doorOpenAtGoalFloor"] = from_union([from_bool, from_none], self.door_open_at_goal_floor)
+        result[u"doorOpenAtStartFloor"] = from_union([from_bool, from_none], self.door_open_at_start_floor)
+        result[u"doorWaitsForClosingCommand"] = from_union([from_bool, from_none], self.door_waits_for_closing_command)
+        result[u"elevatorIds"] = from_union([lambda x: from_list(from_int, x), from_none], self.elevator_ids)
+        result[u"floor"] = from_union([from_int, from_none], self.floor)
+        result[u"id"] = from_union([from_int, from_none], self.id)
+        result[u"isAvailable"] = from_union([from_bool, from_none], self.is_available)
+        result[u"queryId"] = from_union([lambda x: str(x), from_none], self.query_id)
+        result[u"querySuccess"] = from_union([from_bool, from_none], self.query_success)
+        result[u"statusHasChanged"] = from_union([from_bool, from_none], self.status_has_changed)
+        result[u"query"] = from_union([lambda x: to_enum(Query, x), from_none], self.query)
         return result
 
 
@@ -220,14 +227,14 @@ class RopodElevatorStatusSchema:
     @staticmethod
     def from_dict(obj):
         assert isinstance(obj, dict)
-        header = Header.from_dict(obj.get("header"))
-        payload = ElevatorStatusPayload.from_dict(obj.get("payload"))
+        header = Header.from_dict(obj.get(u"header"))
+        payload = ElevatorStatusPayload.from_dict(obj.get(u"payload"))
         return RopodElevatorStatusSchema(header, payload)
 
     def to_dict(self):
         result = {}
-        result["header"] = to_class(Header, self.header)
-        result["payload"] = to_class(ElevatorStatusPayload, self.payload)
+        result[u"header"] = to_class(Header, self.header)
+        result[u"payload"] = to_class(ElevatorStatusPayload, self.payload)
         return result
 
 
