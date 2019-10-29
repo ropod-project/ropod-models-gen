@@ -157,7 +157,7 @@ namespace quicktype {
      */
     enum class MsgMetamodel : int { ROPOD_MSG_SCHEMA_JSON };
 
-    using TimeStamp = std::shared_ptr<boost::variant<double, std::string>>;
+    using HeaderTimeStamp = std::shared_ptr<boost::variant<double, std::string>>;
 
     /**
      * Id of receiver. Can be UUID or any string. This is optional.
@@ -195,7 +195,7 @@ namespace quicktype {
         std::string msg_id;
         ClassMemberConstraints msg_id_constraint;
         std::shared_ptr<std::vector<std::string>> receiver_ids;
-        TimeStamp timestamp;
+        HeaderTimeStamp timestamp;
         TypeEnum type;
         std::shared_ptr<std::string> version;
 
@@ -211,8 +211,8 @@ namespace quicktype {
         std::shared_ptr<std::vector<std::string>> get_receiver_ids() const { return receiver_ids; }
         void set_receiver_ids(std::shared_ptr<std::vector<std::string>> value) { this->receiver_ids = value; }
 
-        TimeStamp get_timestamp() const { return timestamp; }
-        void set_timestamp(TimeStamp value) { this->timestamp = value; }
+        HeaderTimeStamp get_timestamp() const { return timestamp; }
+        void set_timestamp(HeaderTimeStamp value) { this->timestamp = value; }
 
         const TypeEnum & get_type() const { return type; }
         TypeEnum & get_mutable_type() { return type; }
@@ -294,6 +294,8 @@ namespace quicktype {
         void set_y(const double & value) { this->y = value; }
     };
 
+    using PayloadTimeStamp = boost::variant<double, std::string>;
+
     /**
      * Pose payload.
      */
@@ -306,6 +308,7 @@ namespace quicktype {
         MetamodelEnum metamodel;
         Pose2D pose;
         std::string robot_id;
+        PayloadTimeStamp timestamp;
 
         public:
         const MetamodelEnum & get_metamodel() const { return metamodel; }
@@ -319,6 +322,10 @@ namespace quicktype {
         const std::string & get_robot_id() const { return robot_id; }
         std::string & get_mutable_robot_id() { return robot_id; }
         void set_robot_id(const std::string & value) { this->robot_id = value; }
+
+        const PayloadTimeStamp & get_timestamp() const { return timestamp; }
+        PayloadTimeStamp & get_mutable_timestamp() { return timestamp; }
+        void set_timestamp(const PayloadTimeStamp & value) { this->timestamp = value; }
     };
 
     /**
@@ -416,6 +423,7 @@ namespace nlohmann {
         x.set_metamodel(j.at("metamodel").get<quicktype::MetamodelEnum>());
         x.set_pose(j.at("pose").get<quicktype::Pose2D>());
         x.set_robot_id(j.at("robotId").get<std::string>());
+        x.set_timestamp(j.at("timestamp").get<quicktype::PayloadTimeStamp>());
     }
 
     inline void to_json(json & j, const quicktype::Payload & x) {
@@ -423,6 +431,7 @@ namespace nlohmann {
         j["metamodel"] = x.get_metamodel();
         j["pose"] = x.get_pose();
         j["robotId"] = x.get_robot_id();
+        j["timestamp"] = x.get_timestamp();
     }
 
     inline void from_json(const json & j, quicktype::RopodRobotPose2DSchema& x) {

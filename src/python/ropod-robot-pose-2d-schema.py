@@ -195,10 +195,11 @@ class Pose2D:
 
 class Payload:
     """Pose payload."""
-    def __init__(self, metamodel, pose, robot_id):
+    def __init__(self, metamodel, pose, robot_id, timestamp):
         self.metamodel = metamodel
         self.pose = pose
         self.robot_id = robot_id
+        self.timestamp = timestamp
 
     @staticmethod
     def from_dict(obj):
@@ -206,13 +207,15 @@ class Payload:
         metamodel = MetamodelEnum(obj.get(u"metamodel"))
         pose = Pose2D.from_dict(obj.get(u"pose"))
         robot_id = from_str(obj.get(u"robotId"))
-        return Payload(metamodel, pose, robot_id)
+        timestamp = from_union([from_float, from_datetime], obj.get(u"timestamp"))
+        return Payload(metamodel, pose, robot_id, timestamp)
 
     def to_dict(self):
         result = {}
         result[u"metamodel"] = to_enum(MetamodelEnum, self.metamodel)
         result[u"pose"] = to_class(Pose2D, self.pose)
         result[u"robotId"] = from_str(self.robot_id)
+        result[u"timestamp"] = from_union([to_float, lambda x: x.isoformat()], self.timestamp)
         return result
 
 
